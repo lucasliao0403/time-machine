@@ -1,0 +1,14 @@
+# Essential LangChain core
+langchain-core==0.3.74
+
+# Modern LangGraph for agents (includes langchain dependencies)
+langgraph==0.2.68
+
+# OpenAI integration
+langchain-openai==0.2.11
+
+# Environment variable management
+python-dotenv==1.1.1
+
+# Database for TimeMachine storage
+sqlalchemy==2.0.43
