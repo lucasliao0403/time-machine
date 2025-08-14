@@ -72,8 +72,24 @@ print(f"Best scenario: {model_comparison.best_scenario.scenario.name}")
 
 ### **Phase 2.5: In depth test**
 
-Test with a real agent with real LLM calls. 
-Implement counterfactuals with REAL LLM calls if needed.
+Test with a real agent with real LLM calls to validate counterfactual analysis works in practice:
+- Use actual OpenAI/Anthropic API calls (not mocks)
+- Test temperature variations produce meaningful output differences
+- Verify model swapping works across different providers
+- Measure actual execution performance and reliability
+- Validate state serialization with complex real-world data
+- Test counterfactuals on multi-step agents with dependencies
+
+### **Phase 2.8: Missing Critical Features**
+
+Before building UI, we need:
+- **Execution Browsing**: List and filter recorded graph runs by date, status, duration
+- **Data Export**: Export execution data to JSON/CSV for external analysis
+- **Batch Analysis**: Run counterfactuals on multiple executions at once
+- **Result Comparison**: Side-by-side comparison of original vs counterfactual outputs
+- **Search & Query**: Find executions by state content, node names, or metadata
+- **Cleanup Tools**: Archive old recordings, manage database size
+- **Performance Metrics**: Track replay success rates, execution times, memory usage
 
 ## 🎮 "What If" Examples
 
