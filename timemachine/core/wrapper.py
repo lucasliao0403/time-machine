@@ -94,11 +94,14 @@ class TimeMachineGraph:
             else:
                 return self.original_graph.compile()
         
-        # Wrap nodes in the original graph before compilation
-        original_nodes = dict(self.original_graph.nodes)
+        # Create a new StateGraph with wrapped nodes
+        from langgraph.graph.state import StateGraph
         
-        for node_name, node_spec in original_nodes.items():
-            # Extract the actual node function from the StateNodeSpec
+        # Create new graph with same state type
+        new_graph = StateGraph(self.original_graph.schema)
+        
+        # Copy all nodes with wrapping
+        for node_name, node_spec in self.original_graph.nodes.items():
             if hasattr(node_spec, 'runnable') and node_spec.runnable is not None:
                 original_func = node_spec.runnable
                 
@@ -114,20 +117,37 @@ class TimeMachineGraph:
                     graph_run_id=self.graph_run_id
                 )
                 
-                # Replace the node function in the spec
-                node_spec.runnable = wrapped_func
+                # Add wrapped node to new graph
+                new_graph.add_node(node_name, wrapped_func)
         
+        # Copy all edges
+        for edge in self.original_graph.edges:
+            # Handle both tuple format and object format
+            if isinstance(edge, tuple):
+                source, target = edge
+                new_graph.add_edge(source, target)
+            else:
+                new_graph.add_edge(edge.source, edge.target)
+        
+        # Copy conditional edges if any
+        if hasattr(self.original_graph, 'conditional_edges'):
+            for conditional_edge in self.original_graph.conditional_edges:
+                new_graph.add_conditional_edges(
+                    conditional_edge.source,
+                    conditional_edge.condition,
+                    conditional_edge.conditional_edge_mapping
+                )
+        
+        # Copy entry and finish points
+        if hasattr(self.original_graph, '_entry_point'):
+            new_graph._entry_point = self.original_graph._entry_point
+        if hasattr(self.original_graph, '_finish_point'):
+            new_graph._finish_point = self.original_graph._finish_point
+            
         self._is_instrumented = True
         
-        # Store original compile method and call it directly
-        from langgraph.graph.state import StateGraph
-        original_compile_method = StateGraph.compile
-        
-        # Temporarily restore if it was patched
-        if hasattr(StateGraph, '_original_compile'):
-            original_compile_method = StateGraph._original_compile
-        
-        return original_compile_method(self.original_graph)
+        # Compile the new graph
+        return new_graph.compile()
     
     def compile(self) -> Any:
         """Compile the graph with instrumentation"""
