@@ -3,3 +3,5 @@ Run ".\venv\Scripts\activate" in the terminal before running any commands.
 
 When making changes, always make the most concise changes.
 Write clean code and use DRY (Don't Repeat Yourself) standards.
+
+Always refer to /.README when before making changes.

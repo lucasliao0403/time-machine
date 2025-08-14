@@ -3,13 +3,12 @@ Demo test showing TimeMachine integration with the sample agent
 This demonstrates how TimeMachine works with the actual sample_agent.py
 """
 import sys
+import os
 from pathlib import Path
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
-
-import os
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -155,28 +154,48 @@ def show_recordings():
     
     return total_runs > 0
 
+def cleanup_test_files():
+    """Clean up test database files"""
+    db_files = [
+        "test/test_demo_decorator.db",
+        "test/test_demo_direct.db", 
+        "test/test_demo_context.db"
+    ]
+    for db_file in db_files:
+        if os.path.exists(db_file):
+            try:
+                os.remove(db_file)
+                print(f"[CLEANUP] Removed {db_file}")
+            except Exception as e:
+                print(f"[WARNING] Could not remove {db_file}: {e}")
+
 def run_all_demos():
     """Run all demo approaches"""
     print("[DEMO] TimeMachine Sample Agent Demo Suite")
     print("=" * 60)
     
-    # Test all approaches
-    result1 = test_decorator_approach()
-    result2 = test_direct_wrapping()
-    result3 = test_context_manager()
+    try:
+        # Test all approaches
+        result1 = test_decorator_approach()
+        result2 = test_direct_wrapping()
+        result3 = test_context_manager()
+        
+        # Show what was recorded
+        has_recordings = show_recordings()
+        
+        # Verify all approaches worked
+        success = (
+            result1 and len(result1.get('messages', [])) >= 2 and
+            result2 and len(result2.get('messages', [])) >= 2 and
+            result3 and len(result3.get('messages', [])) >= 2 and
+            has_recordings
+        )
+        
+        return success
     
-    # Show what was recorded
-    has_recordings = show_recordings()
-    
-    # Verify all approaches worked
-    success = (
-        result1 and len(result1.get('messages', [])) >= 2 and
-        result2 and len(result2.get('messages', [])) >= 2 and
-        result3 and len(result3.get('messages', [])) >= 2 and
-        has_recordings
-    )
-    
-    return success
+    finally:
+        # Always cleanup, even if test fails
+        cleanup_test_files()
 
 if __name__ == "__main__":
     success = run_all_demos()

@@ -3,6 +3,7 @@ Test TimeMachine context manager
 Tests the 'with timemachine.recording():' context manager functionality
 """
 import sys
+import os
 from pathlib import Path
 
 # Add project root to Python path
@@ -44,13 +45,26 @@ def create_regular_agent():
     chat_graph.add_edge("step2", END)
     return chat_graph.compile()
 
+def cleanup_test_files():
+    """Clean up test database files"""
+    db_files = ["test/test_context.db"]
+    for db_file in db_files:
+        if os.path.exists(db_file):
+            try:
+                os.remove(db_file)
+                print(f"[CLEANUP] Removed {db_file}")
+            except Exception as e:
+                print(f"[WARNING] Could not remove {db_file}: {e}")
+
 def test_context_manager():
     """Test context manager approach"""
+    db_path = "test/test_context.db"
+    
     print("[TEST] TimeMachine Context Manager Test")
     print("=" * 40)
     
     try:
-        with timemachine.recording("test/test_context.db"):
+        with timemachine.recording(db_path):
             agent = create_regular_agent()
             result = agent.invoke({"messages": [], "topic": ""})
         
@@ -59,7 +73,7 @@ def test_context_manager():
         print(f"Final topic: {result['topic']}")
         
         # Check recordings
-        recorder = timemachine.TimeMachineRecorder("test/test_context.db")
+        recorder = timemachine.TimeMachineRecorder(db_path)
         runs = recorder.list_graph_runs()
         print(f"\n[INFO] Recorded {len(runs)} graph runs")
         
@@ -79,6 +93,10 @@ def test_context_manager():
     except Exception as e:
         print(f"[FAIL] Context manager test failed: {e}")
         return False
+    
+    finally:
+        # Always cleanup, even if test fails
+        cleanup_test_files()
 
 if __name__ == "__main__":
     success = test_context_manager()

@@ -5,6 +5,7 @@ Runs all test files and provides a summary
 import os
 import sys
 import subprocess
+import glob
 from pathlib import Path
 
 def run_test_file(test_file):
@@ -38,6 +39,30 @@ def run_test_file(test_file):
         print(f"[FAIL] Test failed to run: {e}")
         return False, "", str(e)
 
+def cleanup_all_test_files():
+    """Clean up all test database files"""
+    print(f"\n{'='*60}")
+    print("CLEANUP - Removing test database files")
+    print(f"{'='*60}")
+    
+    # Find all .db files in test directory
+    test_dir = Path(__file__).parent
+    db_files = glob.glob(str(test_dir / "*.db"))
+    
+    removed_count = 0
+    for db_file in db_files:
+        try:
+            os.remove(db_file)
+            print(f"[CLEANUP] Removed {db_file}")
+            removed_count += 1
+        except Exception as e:
+            print(f"[WARNING] Could not remove {db_file}: {e}")
+    
+    if removed_count == 0:
+        print("[INFO] No database files found to clean up")
+    else:
+        print(f"[INFO] Cleaned up {removed_count} database file(s)")
+
 def main():
     """Run all tests and provide summary"""
     print("[TEST] TimeMachine Test Suite Runner")
@@ -53,36 +78,41 @@ def main():
         "test/test_demo_sample_agent.py"
     ]
     
-    results = {}
+    try:
+        results = {}
+        
+        for test_file in test_files:
+            passed, stdout, stderr = run_test_file(test_file)
+            results[test_file] = {
+                'passed': passed,
+                'stdout': stdout,
+                'stderr': stderr
+            }
+        
+        # Summary
+        print(f"\n{'='*60}")
+        print("TEST SUMMARY")
+        print(f"{'='*60}")
+        
+        total_tests = len(test_files)
+        passed_tests = sum(1 for r in results.values() if r['passed'])
+        
+        for test_file, result in results.items():
+            status = "[PASS] PASSED" if result['passed'] else "[FAIL] FAILED"
+            print(f"{status:12} {test_file}")
+        
+        print(f"\nOverall: {passed_tests}/{total_tests} tests passed")
+        
+        if passed_tests == total_tests:
+            print("\n[SUCCESS] ALL TESTS PASSED! TimeMachine is working correctly.")
+            return True
+        else:
+            print(f"\n[WARNING] {total_tests - passed_tests} test(s) failed. Check output above for details.")
+            return False
     
-    for test_file in test_files:
-        passed, stdout, stderr = run_test_file(test_file)
-        results[test_file] = {
-            'passed': passed,
-            'stdout': stdout,
-            'stderr': stderr
-        }
-    
-    # Summary
-    print(f"\n{'='*60}")
-    print("TEST SUMMARY")
-    print(f"{'='*60}")
-    
-    total_tests = len(test_files)
-    passed_tests = sum(1 for r in results.values() if r['passed'])
-    
-    for test_file, result in results.items():
-        status = "[PASS] PASSED" if result['passed'] else "[FAIL] FAILED"
-        print(f"{status:12} {test_file}")
-    
-    print(f"\nOverall: {passed_tests}/{total_tests} tests passed")
-    
-    if passed_tests == total_tests:
-        print("\n[SUCCESS] ALL TESTS PASSED! TimeMachine is working correctly.")
-        return True
-    else:
-        print(f"\n[WARNING] {total_tests - passed_tests} test(s) failed. Check output above for details.")
-        return False
+    finally:
+        # Always cleanup test files, even if tests fail
+        cleanup_all_test_files()
 
 if __name__ == "__main__":
     success = main()
