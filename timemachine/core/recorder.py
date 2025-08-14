@@ -140,3 +140,69 @@ class TimeMachineRecorder:
             """, (graph_run_id,))
             return [dict(zip([col[0] for col in cursor.description], row)) 
                    for row in cursor.fetchall()]
+    
+    def save_llm_call(self, llm_call):
+        """Save LLM call data to database"""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute("""
+                INSERT INTO llm_calls 
+                (id, execution_id, model_name, temperature, prompt, response, 
+                 tokens_used, timestamp, duration_ms)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                llm_call.id,
+                llm_call.execution_id,
+                llm_call.model_name,
+                llm_call.temperature,
+                llm_call.prompt,
+                llm_call.response,
+                llm_call.total_tokens,
+                int(llm_call.timestamp * 1000),
+                llm_call.duration_ms
+            ))
+            conn.commit()
+    
+    def get_llm_calls(self, execution_id: str) -> list[Dict[str, Any]]:
+        """Get all LLM calls for a specific execution"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute("""
+                SELECT * FROM llm_calls 
+                WHERE execution_id = ?
+                ORDER BY timestamp
+            """, (execution_id,))
+            return [dict(zip([col[0] for col in cursor.description], row)) 
+                   for row in cursor.fetchall()]
+    
+    def get_llm_calls_for_graph_run(self, graph_run_id: str) -> list[Dict[str, Any]]:
+        """Get all LLM calls for a graph run"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute("""
+                SELECT lc.* FROM llm_calls lc
+                JOIN node_executions ne ON lc.execution_id = ne.id
+                WHERE ne.graph_run_id = ?
+                ORDER BY lc.timestamp
+            """, (graph_run_id,))
+            return [dict(zip([col[0] for col in cursor.description], row)) 
+                   for row in cursor.fetchall()]
+    
+    def get_execution_by_id(self, execution_id: str) -> Optional[Dict[str, Any]]:
+        """Get a specific execution by ID"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute("""
+                SELECT * FROM node_executions 
+                WHERE id = ?
+            """, (execution_id,))
+            row = cursor.fetchone()
+            if row:
+                return dict(zip([col[0] for col in cursor.description], row))
+            return None
+    
+    def update_execution_with_llm_data(self, execution_id: str, total_tokens: int, estimated_cost: float):
+        """Update execution with aggregated LLM data"""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute("""
+                UPDATE node_executions 
+                SET total_tokens = ?, estimated_cost = ?
+                WHERE id = ?
+            """, (total_tokens, estimated_cost, execution_id))
+            conn.commit()
