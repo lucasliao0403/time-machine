@@ -135,6 +135,19 @@ prompt_analysis = engine.analyze_prompt_variations("execution_123", prompts)
 print(f"Best prompt approach: {prompt_analysis.best_scenario.scenario.name}")
 ```
 
+### Web UI Interface
+```bash
+# Start the web interface
+cd web
+npm install
+npm run dev
+
+# In another terminal, start the backend
+python backend.py
+
+# Open http://localhost:3000 in your browser
+```
+
 ### Parameter Sweeps
 ```python
 # Test ranges of values systematically
@@ -169,7 +182,7 @@ TimeMachine operates in two simplified phases:
 1. **Recording Phase** - Captures all node executions with full state
 2. **"What If" Phase** - Enables counterfactual scenario analysis
 
-### Current Structure (Phase 2)
+### Current Structure (Phase 3)
 ```
 time-machine/
 ├── timemachine/
@@ -179,12 +192,20 @@ time-machine/
 │   │   ├── wrapper.py        # Node instrumentation  
 │   │   ├── serializer.py     # State serialization
 │   │   └── decorator.py      # Integration helpers
-│   └── replay/               # Phase 3: "What if" games
+│   └── replay/               # Phase 2: "What if" games
 │       ├── engine.py         # Replay orchestration
 │       └── counterfactual.py # Counterfactual scenarios
-├── test/                     # Simplified test suite
+├── web/                      # Phase 3: Web UI
+│   ├── src/
+│   │   ├── app/              # Next.js App Router
+│   │   ├── components/       # React components
+│   │   ├── lib/              # API client and utilities
+│   │   └── types/            # TypeScript definitions
+│   ├── backend.py            # FastAPI backend
+│   └── package.json          # Node.js dependencies
+├── test/                     # Comprehensive test suite
 ├── sample_agent.py           # Demo LangGraph agent
-└── requirements.txt          # Dependencies
+└── requirements.txt          # Python dependencies
 ```
 
 ## 🔍 What Gets Recorded
@@ -250,12 +271,13 @@ agent = tm_graph.compile()
 - [x] Parameter sweep analysis
 - [x] Replay engine for modifications
 
-### 🚧 Phase 3: Web UI (PLANNED)
-- [ ] Web-based execution viewer
-- [ ] State inspection interface
-- [ ] Timeline visualization
-- [ ] Debugging tools
-- [ ] Export capabilities
+### ✅ Phase 3: Web UI (COMPLETE)
+- [x] Next.js web application with TypeScript
+- [x] Graph runs browser and execution timeline
+- [x] Interactive counterfactual analysis interface
+- [x] Real-time results visualization with charts
+- [x] FastAPI backend integration
+- [x] Responsive design with Tailwind CSS
 
 ## 📝 Sample Agent
 
@@ -270,13 +292,45 @@ Perfect for testing TimeMachine integration:
 python test/test_demo_sample_agent.py
 ```
 
+## 🌐 Web Interface
+
+TimeMachine includes a modern web interface built with Next.js and TypeScript:
+
+### Features
+- **Graph Runs Browser** - View all recorded agent executions in a clean interface
+- **Execution Timeline** - Drill down into individual node executions with detailed state inspection
+- **Interactive Counterfactuals** - Run "what if" experiments with intuitive parameter controls
+- **Real-time Visualization** - Charts and graphs showing output differences and success rates
+- **Responsive Design** - Works seamlessly on desktop and mobile devices
+
+### Quick Start
+```bash
+# Install and start the web UI
+cd web
+npm install
+npm run dev
+
+# Start the backend API (in another terminal)
+python backend.py
+
+# Open http://localhost:3000
+```
+
+### Usage Flow
+1. **Record Executions** → Use Python decorators to capture agent runs
+2. **Browse Data** → View runs and executions in the web interface  
+3. **Select & Experiment** → Pick any execution and run counterfactual tests
+4. **Analyze Results** → Visualize differences and insights with interactive charts
+
 ## 🛠️ Development
 
 ### Requirements
 - Python 3.11+
+- Node.js 18+ and npm (for web UI)
 - LangGraph 0.2.68+
 - LangChain Core 0.3.74+
 - SQLAlchemy 2.0.43+
+- FastAPI 0.104+ (for web backend)
 - OpenAI API key (for sample agent)
 
 ### Environment Setup
@@ -290,12 +344,19 @@ cp .env.example .env
 
 ### Running Tests
 ```bash
-# Run all tests
+# Run Python tests
 python test/run_all_tests.py
 
 # Run specific tests
 python test/test_basic_functionality.py
 python test/test_phase2_replay.py
+
+# Test with real agent (requires OpenAI API key)
+python test/test_real_agent_e2e.py
+
+# Start web interface for manual testing
+cd web
+npm run dev
 ```
 
 ## 🤝 Contributing

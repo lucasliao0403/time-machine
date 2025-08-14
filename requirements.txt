@@ -12,3 +12,7 @@ python-dotenv==1.1.1
 
 # Database for TimeMachine storage
 sqlalchemy==2.0.43
+
+# Web API backend for Phase 3
+fastapi==0.104.1
+uvicorn==0.24.0
