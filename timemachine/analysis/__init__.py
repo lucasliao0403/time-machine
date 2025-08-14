@@ -1,8 +1,7 @@
-# TimeMachine Analysis Module
-# Phase 2: LLM call tracking, cost analysis, and pattern detection
+# TimeMachine Analysis Module - Phase 2.5 Simplified
+# Only essential components for counterfactual analysis
 
-from .llm_tracker import LLMTracker
-from .cost_analyzer import CostAnalyzer
-from .patterns import PatternDetector
+# No imports - analysis features removed in Phase 2.5
+# Only replay/counterfactual features remain
 
-__all__ = ['LLMTracker', 'CostAnalyzer', 'PatternDetector']
+__all__ = []

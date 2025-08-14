@@ -78,8 +78,7 @@ def main():
         "test/test_context_manager.py",
         "test/test_demo_sample_agent.py",
         
-        # Phase 2 Tests
-        "test/test_phase2_llm_tracking.py",
+        # Phase 2.5 Tests (Simplified)
         "test/test_phase2_replay.py"
     ]
     
@@ -110,16 +109,16 @@ def main():
         
         # Categorize results by phase
         phase1_files = [f for f in test_files if "phase2" not in f]
-        phase2_files = [f for f in test_files if "phase2" in f]
+        phase25_files = [f for f in test_files if "phase2" in f]
         
         phase1_passed = sum(1 for f in phase1_files if results[f]['passed'])
-        phase2_passed = sum(1 for f in phase2_files if results[f]['passed'])
+        phase25_passed = sum(1 for f in phase25_files if results[f]['passed'])
         
         print(f"\nPhase 1 (Core Recording): {phase1_passed}/{len(phase1_files)} passed")
-        print(f"Phase 2 (Analysis & Replay): {phase2_passed}/{len(phase2_files)} passed")
+        print(f"Phase 2.5 (Simplified Counterfactuals): {phase25_passed}/{len(phase25_files)} passed")
         
         if passed_tests == total_tests:
-            print("\n[SUCCESS] ALL TESTS PASSED! TimeMachine Phases 1 & 2 are working correctly.")
+            print("\n[SUCCESS] ALL TESTS PASSED! TimeMachine Phase 1 & 2.5 are working correctly.")
             return True
         else:
             print(f"\n[WARNING] {total_tests - passed_tests} test(s) failed. Check output above for details.")

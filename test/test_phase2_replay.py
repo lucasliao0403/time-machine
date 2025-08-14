@@ -1,6 +1,6 @@
 """
-Test Phase 2: Replay and Counterfactual functionality
-Tests replay engine and counterfactual analysis
+Test Phase 2.5: Simplified Replay and Counterfactual functionality
+Tests only the essential "what if" counterfactual analysis
 """
 import sys
 from pathlib import Path
@@ -15,7 +15,6 @@ from langgraph.graph.message import add_messages
 
 from timemachine.replay.engine import ReplayEngine, ReplayConfiguration, ReplayResult
 from timemachine.replay.counterfactual import CounterfactualEngine, CounterfactualScenario, CounterfactualType
-from timemachine.replay.cache import ResponseCache
 from timemachine.core.recorder import TimeMachineRecorder
 from timemachine.core.serializer import StateSerializer
 
@@ -177,96 +176,52 @@ def test_counterfactual_engine():
     return success
 
 
-def test_response_cache():
-    """Test response caching functionality"""
-    print("\n[TEST] Response Cache")
-    print("=" * 40)
-    
-    cache = ResponseCache("test/test_cache.db")
-    
-    # Test cache operations
-    model_name = "gpt-3.5-turbo"
-    prompt = "Test prompt for caching"
-    parameters = {"temperature": 0.7, "max_tokens": 100}
-    response = "This is a cached response"
-    
-    # Cache a response
-    cache_key = cache.cache_response(model_name, prompt, parameters, response, 50, 0.001)
-    
-    # Retrieve cached response
-    cached = cache.get_cached_response(model_name, prompt, parameters)
-    
-    success = (
-        cached is not None and
-        cached.response == response and
-        cached.model_name == model_name and
-        cached.cache_key == cache_key
-    )
-    
-    print(f"  Cache operations: {'[PASS]' if success else '[FAIL]'}")
-    print(f"  Cache key: {cache_key[:20]}...")
-    print(f"  Retrieved response: {'Found' if cached else 'Not found'}")
-    
-    # Test cache stats
-    stats = cache.get_cache_stats()
-    print(f"  Cache entries: {stats['total_entries']}")
-    print(f"  Hit rate: {stats['hit_rate_percent']}%")
-    
-    return success
-
-
-def test_counterfactual_cost_optimization():
-    """Test cost optimization counterfactuals"""
-    print("\n[TEST] Cost Optimization Counterfactuals")
+def test_simple_scenario_analysis():
+    """Test simple 'what if' scenario analysis - Phase 2.5 focus"""
+    print("\n[TEST] Simple 'What If' Analysis")
     print("=" * 40)
     
     class MockReplayEngine:
         def replay_execution(self, execution_id, config):
-            # Simulate different cost outcomes based on modifications
-            cost_diff = 0.0
+            # Simple mock that varies output based on modifications
+            output_diff = 0.0
             if config.modify_llm_params:
-                if 'model_name' in config.modify_llm_params:
-                    model = config.modify_llm_params['model_name']
-                    if 'gpt-3.5' in model:
-                        cost_diff = -0.05  # Savings with cheaper model
-                    elif 'gpt-4' in model:
-                        cost_diff = 0.05   # Cost increase with expensive model
                 if 'temperature' in config.modify_llm_params:
                     temp = config.modify_llm_params['temperature']
                     if temp < 0.3:
-                        cost_diff -= 0.001  # Slight savings with deterministic output
+                        output_diff = 0.1  # Small change for low temp
+                    elif temp > 0.8:
+                        output_diff = 0.8  # Big change for high temp
+                    else:
+                        output_diff = 0.3  # Medium change
+                if 'model_name' in config.modify_llm_params:
+                    output_diff += 0.2  # Model changes add variance
             
             return ReplayResult(
                 original_execution_id=execution_id,
                 replay_id=f"replay_{execution_id}",
                 original_output={"messages": [{"content": "Original"}]},
-                replayed_output={"messages": [{"content": "Optimized"}]},
-                changes_made=["Cost optimization applied"],
+                replayed_output={"messages": [{"content": "Modified"}]},
+                changes_made=["Parameter modification applied"],
                 success=True,
                 error=None,
                 duration_ms=100.0,
-                cost_difference=cost_diff,
-                output_difference_score=0.2
+                cost_difference=0.0,  # Not tracking costs in 2.5
+                output_difference_score=output_diff
             )
     
     engine = CounterfactualEngine(MockReplayEngine())
-    comparison = engine.analyze_cost_optimization('test_exec_1')
-    
-    # Find scenarios with cost savings
-    cost_saving_scenarios = [
-        s for s in comparison.scenarios 
-        if s.replay_result.cost_difference < 0
-    ]
+    comparison = engine.analyze_temperature_sensitivity('test_exec_1', [0.1, 0.5, 0.9])
     
     success = (
-        len(comparison.scenarios) > 0 and
-        len(cost_saving_scenarios) > 0 and
-        comparison.best_scenario is not None
+        len(comparison.scenarios) == 3 and
+        comparison.best_scenario is not None and
+        len(comparison.recommendations) > 0
     )
     
-    print(f"  Cost optimization scenarios: {len(comparison.scenarios)}")
-    print(f"  Cost-saving scenarios: {len(cost_saving_scenarios)}")
-    print(f"  Best scenario savings: ${abs(comparison.best_scenario.replay_result.cost_difference):.4f}" if comparison.best_scenario else "None")
+    print(f"  Temperature scenarios: {len(comparison.scenarios)}")
+    print(f"  Best scenario: {comparison.best_scenario.scenario.name if comparison.best_scenario else 'None'}")
+    print(f"  Recommendations: {len(comparison.recommendations)}")
     
     return success
 
@@ -309,8 +264,8 @@ def test_replay_with_state_modifications():
 
 
 def run_all_replay_tests():
-    """Run all replay and counterfactual tests"""
-    print("[TEST] TimeMachine Phase 2 Replay Test Suite")
+    """Run all simplified replay and counterfactual tests - Phase 2.5"""
+    print("[TEST] TimeMachine Phase 2.5 Simplified Replay Test Suite")
     print("=" * 60)
     
     tests = [
@@ -318,8 +273,7 @@ def run_all_replay_tests():
         test_replay_engine_basic,
         test_counterfactual_scenarios,
         test_counterfactual_engine,
-        test_response_cache,
-        test_counterfactual_cost_optimization,
+        test_simple_scenario_analysis,
         test_replay_with_state_modifications
     ]
     
@@ -335,7 +289,7 @@ def run_all_replay_tests():
     passed = sum(results)
     total = len(results)
     
-    print(f"\n[INFO] Replay Test Results:")
+    print(f"\n[INFO] Phase 2.5 Simplified Test Results:")
     print(f"  Passed: {passed}/{total}")
     print(f"  Success rate: {passed/total*100:.1f}%")
     
@@ -344,4 +298,4 @@ def run_all_replay_tests():
 
 if __name__ == "__main__":
     success = run_all_replay_tests()
-    print(f"\n{'[PASS] ALL REPLAY TESTS PASSED' if success else '[FAIL] SOME REPLAY TESTS FAILED'}")
+    print(f"\n{'[PASS] ALL PHASE 2.5 TESTS PASSED' if success else '[FAIL] SOME PHASE 2.5 TESTS FAILED'}")

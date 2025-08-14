@@ -1,6 +1,7 @@
 """
-Counterfactual Analysis Engine for TimeMachine
+Counterfactual Analysis Engine for TimeMachine - Phase 2.5 Simplified
 "What if" scenario analysis for LLM agent executions
+Focus only on essential counterfactual features
 """
 from typing import Any, Dict, List, Optional, Tuple
 from dataclasses import dataclass
@@ -123,62 +124,8 @@ class CounterfactualEngine:
         
         return self._run_scenarios(execution_id, scenarios)
     
-    def analyze_cost_optimization(self, execution_id: str) -> CounterfactualComparison:
-        """Find cost-optimized alternatives"""
-        # Define cost-optimization scenarios
-        scenarios = [
-            CounterfactualScenario(
-                name="Cost Optimized: GPT-3.5",
-                description="Use GPT-3.5-turbo for cost savings",
-                type=CounterfactualType.MODEL_CHANGE,
-                modifications={'model_name': 'gpt-3.5-turbo'},
-                expected_outcome="Lower cost, potentially lower quality"
-            ),
-            CounterfactualScenario(
-                name="Cost Optimized: Lower Temperature",
-                description="Use temperature=0.1 for fewer tokens",
-                type=CounterfactualType.TEMPERATURE_CHANGE,
-                modifications={'temperature': 0.1},
-                expected_outcome="More deterministic, potentially shorter responses"
-            ),
-            CounterfactualScenario(
-                name="Cost Optimized: Token Limit",
-                description="Limit output tokens to 100",
-                type=CounterfactualType.PARAMETER_SWEEP,
-                modifications={'max_tokens': 100},
-                expected_outcome="Shorter responses, lower cost"
-            )
-        ]
-        
-        return self._run_scenarios(execution_id, scenarios)
-    
-    def analyze_quality_optimization(self, execution_id: str) -> CounterfactualComparison:
-        """Find quality-optimized alternatives"""
-        scenarios = [
-            CounterfactualScenario(
-                name="Quality Optimized: GPT-4",
-                description="Use GPT-4 for highest quality",
-                type=CounterfactualType.MODEL_CHANGE,
-                modifications={'model_name': 'gpt-4'},
-                expected_outcome="Higher quality, higher cost"
-            ),
-            CounterfactualScenario(
-                name="Quality Optimized: Detailed Prompt",
-                description="Add detailed instructions",
-                type=CounterfactualType.PROMPT_CHANGE,
-                modifications={'replace_inputs': {'0': self._enhance_prompt_for_quality}},
-                expected_outcome="More detailed and accurate responses"
-            ),
-            CounterfactualScenario(
-                name="Quality Optimized: Higher Temperature",
-                description="Use temperature=0.8 for more creative responses",
-                type=CounterfactualType.TEMPERATURE_CHANGE,
-                modifications={'temperature': 0.8},
-                expected_outcome="More creative and diverse responses"
-            )
-        ]
-        
-        return self._run_scenarios(execution_id, scenarios)
+    # Note: Cost and quality optimization methods removed in Phase 2.5
+    # Focus only on core "what if" scenario analysis
     
     def _enhance_prompt_for_quality(self, original_prompt: str) -> str:
         """Enhance a prompt for better quality"""
@@ -350,26 +297,17 @@ class CounterfactualEngine:
         return max(0.0, min(1.0, confidence))
     
     def _find_best_scenario(self, results: List[CounterfactualResult]) -> Optional[CounterfactualResult]:
-        """Find the best performing scenario"""
+        """Find the best performing scenario - simplified scoring"""
         successful_results = [r for r in results if r.replay_result.success]
         if not successful_results:
             return None
         
-        # Score based on cost savings and output quality (simplified)
+        # Simple scoring based on confidence and output difference
         def score_scenario(result: CounterfactualResult) -> float:
-            score = 0.0
-            
-            # Reward cost savings
-            if result.replay_result.cost_difference < 0:
-                score += abs(result.replay_result.cost_difference) * 100
-            
-            # Penalize excessive cost increases
-            if result.replay_result.cost_difference > 0.1:
-                score -= result.replay_result.cost_difference * 50
-            
-            # Reward confidence
-            score += result.confidence * 10
-            
+            score = result.confidence * 10
+            # Prefer scenarios with meaningful output changes
+            if result.replay_result.output_difference_score > 0.1:
+                score += 5
             return score
         
         return max(successful_results, key=score_scenario)
@@ -379,54 +317,46 @@ class CounterfactualEngine:
         if not results:
             return None
         
-        # Prioritize failed scenarios, then high cost/low confidence
+        # Prioritize failed scenarios, then low confidence
         failed_results = [r for r in results if not r.replay_result.success]
         if failed_results:
             return failed_results[0]
         
         def score_scenario(result: CounterfactualResult) -> float:
-            score = 0.0
-            score += result.replay_result.cost_difference * 100  # Higher cost = worse
-            score -= result.confidence * 10  # Lower confidence = worse
-            return score
+            return -result.confidence  # Lower confidence = worse
         
         return max(results, key=score_scenario)
     
     def _generate_overall_insights(self, results: List[CounterfactualResult]) -> List[str]:
-        """Generate insights across all scenarios"""
+        """Generate insights across all scenarios - simplified for Phase 2.5"""
         insights = []
         
         successful_count = sum(1 for r in results if r.replay_result.success)
         insights.append(f"{successful_count}/{len(results)} scenarios executed successfully")
         
-        cost_savings = [r.replay_result.cost_difference for r in results 
-                       if r.replay_result.success and r.replay_result.cost_difference < 0]
-        if cost_savings:
-            max_savings = abs(min(cost_savings))
-            insights.append(f"Maximum potential savings: ${max_savings:.3f} per execution")
-        
         high_variance_scenarios = [r for r in results 
                                  if r.replay_result.success and r.replay_result.output_difference_score > 0.7]
         if high_variance_scenarios:
-            insights.append(f"{len(high_variance_scenarios)} scenarios showed high output variance")
+            insights.append(f"{len(high_variance_scenarios)} scenarios showed significant output changes")
         
         return insights
     
     def _generate_recommendations(self, results: List[CounterfactualResult]) -> List[str]:
-        """Generate actionable recommendations"""
+        """Generate actionable recommendations - simplified for Phase 2.5"""
         recommendations = []
         
         best = self._find_best_scenario(results)
         if best:
-            recommendations.append(f"Consider implementing '{best.scenario.name}' for optimal results")
-        
-        cost_efficient = [r for r in results 
-                         if r.replay_result.success and r.replay_result.cost_difference < -0.005]
-        if cost_efficient:
-            recommendations.append("Several cost-saving alternatives identified - review quality trade-offs")
+            recommendations.append(f"Consider implementing '{best.scenario.name}' based on analysis")
         
         failed_scenarios = [r for r in results if not r.replay_result.success]
         if failed_scenarios:
             recommendations.append("Some scenarios failed - review error handling and input validation")
+        
+        # Focus on output variation insights
+        high_change_scenarios = [r for r in results 
+                               if r.replay_result.success and r.replay_result.output_difference_score > 0.5]
+        if len(high_change_scenarios) > len(results) * 0.5:
+            recommendations.append("Multiple scenarios produced significant output changes - review sensitivity")
         
         return recommendations

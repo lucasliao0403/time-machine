@@ -1,8 +1,7 @@
-# TimeMachine Replay Module
-# Phase 2: Counterfactual analysis and replay capabilities
+# TimeMachine Replay Module - Phase 2.5 Simplified
+# Focus only on counterfactual "what if" analysis
 
 from .engine import ReplayEngine
 from .counterfactual import CounterfactualEngine
-from .cache import ResponseCache
 
-__all__ = ['ReplayEngine', 'CounterfactualEngine', 'ResponseCache']
+__all__ = ['ReplayEngine', 'CounterfactualEngine']

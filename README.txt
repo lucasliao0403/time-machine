@@ -262,6 +262,10 @@ TimeMachine follows a modular architecture:
 - [ ] Cost estimation
 - [ ] Response caching
 
+### **Phase 2.5: Simplification (Next)**
+
+Cut out unnecessary features like caching responses and tracking AI, and finding problems and waste. Focus only on "what if" games.
+
 ### 🚧 Phase 3: Web UI (PLANNED)
 - [ ] Web-based execution viewer
 - [ ] State inspection interface

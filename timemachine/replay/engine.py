@@ -1,6 +1,7 @@
 """
-Replay Engine for TimeMachine
+Replay Engine for TimeMachine - Phase 2.5 Simplified
 Replays recorded executions with optional modifications
+Focus on essential replay functionality for counterfactual analysis
 """
 import json
 from typing import Any, Dict, List, Optional, Union
@@ -8,7 +9,6 @@ from dataclasses import dataclass
 from copy import deepcopy
 
 from ..core.serializer import StateSerializer
-from ..analysis.llm_tracker import LLMCall
 
 
 @dataclass
@@ -22,7 +22,7 @@ class ReplayResult:
     success: bool
     error: Optional[str]
     duration_ms: float
-    cost_difference: float
+    cost_difference: float  # Simplified - not actively calculated in 2.5
     output_difference_score: float
 
 
@@ -91,8 +91,8 @@ class ReplayEngine:
             changes_made = self._get_changes_made(config)
             difference_score = self._calculate_output_difference(original_output, replayed_output)
             
-            # Calculate cost difference (if LLM calls were made)
-            cost_diff = self._calculate_cost_difference(execution_id, config)
+            # Cost tracking simplified in Phase 2.5
+            cost_diff = 0.0
             
             return ReplayResult(
                 original_execution_id=execution_id,
@@ -285,9 +285,8 @@ class ReplayEngine:
         return 1.0 - (len(common_words) / len(all_words)) if all_words else 0.0
     
     def _calculate_cost_difference(self, execution_id: str, config: ReplayConfiguration) -> float:
-        """Calculate cost difference between original and replay"""
-        # This would compare original LLM call costs with replay costs
-        # For now, return 0.0
+        """Calculate cost difference between original and replay - simplified in Phase 2.5"""
+        # Cost analysis removed in Phase 2.5 simplification
         return 0.0
     
     def _get_changes_made(self, config: ReplayConfiguration) -> List[str]:
