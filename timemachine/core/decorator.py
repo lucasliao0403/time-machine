@@ -35,6 +35,10 @@ def record(db_path: str = "timemachine_recordings.db"):
             # If result is a StateGraph, wrap it and compile
             if isinstance(result, StateGraph):
                 timemachine_graph = TimeMachineGraph(result, db_path)
+                
+                # Store global reference for function registry access
+                wrapper._timemachine_graph = timemachine_graph
+                
                 return timemachine_graph.compile()
             
             # If result is already compiled, we need to access the original graph

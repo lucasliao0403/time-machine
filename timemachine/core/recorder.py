@@ -15,6 +15,7 @@ class TimeMachineRecorder:
     
     def __init__(self, db_path: str = "timemachine_recordings.db"):
         self.db_path = db_path
+        self.function_registry = {}  # Store node functions for replay
         self.init_database()
         
     def init_database(self):

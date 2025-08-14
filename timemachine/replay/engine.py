@@ -82,7 +82,11 @@ class ReplayEngine:
                     node_function, input_state, config.modify_llm_params
                 )
             else:
-                replayed_output = node_function(input_state)
+                # Handle both plain functions and RunnableCallable objects
+                if hasattr(node_function, 'invoke'):
+                    replayed_output = node_function.invoke(input_state)
+                else:
+                    replayed_output = node_function(input_state)
             
             duration = (time.time() - start_time) * 1000
             
@@ -221,8 +225,11 @@ class ReplayEngine:
             except ImportError:
                 pass
             
-            # Execute the node function
-            result = node_function(input_state)
+            # Execute the node function  
+            if hasattr(node_function, 'invoke'):
+                result = node_function.invoke(input_state)
+            else:
+                result = node_function(input_state)
             return result
             
         finally:
@@ -237,9 +244,15 @@ class ReplayEngine:
                         pass
     
     def _get_node_function(self, node_name: str) -> Optional[Any]:
-        """Get the original node function (this would need to be registered)"""
-        # In a real implementation, you'd need a registry of node functions
-        # For now, return None to indicate not available
+        """Get the original node function from global registry"""
+        # Try to get from global function registry
+        if hasattr(self, '_function_registry') and node_name in self._function_registry:
+            return self._function_registry[node_name]
+        
+        # Try to get from recorder if available
+        if self.recorder and hasattr(self.recorder, 'function_registry'):
+            return self.recorder.function_registry.get(node_name)
+        
         return None
     
     def _calculate_output_difference(self, original: Any, replayed: Any) -> float:
@@ -309,8 +322,9 @@ class ReplayEngine:
         """Get execution data from recorder"""
         if not self.recorder:
             return None
-        # This would be implemented in the recorder
-        return None
+        
+        # Get execution by ID from recorder
+        return self.recorder.get_execution_by_id(execution_id)
     
     def _get_graph_executions(self, graph_run_id: str) -> List[Dict]:
         """Get all executions for a graph run"""

@@ -81,6 +81,7 @@ class TimeMachineGraph:
         self.original_graph = original_graph
         self.recorder = TimeMachineRecorder(db_path)
         self.graph_run_id = str(uuid.uuid4())
+        self.function_registry = {}  # Store node functions for replay
         self._is_instrumented = False
     
     def instrument_graph(self):
@@ -100,6 +101,10 @@ class TimeMachineGraph:
             # Extract the actual node function from the StateNodeSpec
             if hasattr(node_spec, 'runnable') and node_spec.runnable is not None:
                 original_func = node_spec.runnable
+                
+                # Store function in registries for replay
+                self.function_registry[node_name] = original_func
+                self.recorder.function_registry[node_name] = original_func
                 
                 # Create wrapped version
                 wrapped_func = TimeMachineNodeWrapper(
