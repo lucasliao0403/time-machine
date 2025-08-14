@@ -1,6 +1,6 @@
-# TimeMachine - Time-Travel Debugger for LangGraph Agents
+# TimeMachine - "What If" Games for LangGraph Agents
 
-TimeMachine is a comprehensive debugging and recording system for LangGraph agents that captures every node execution with full state tracking. Think of it as a "flight recorder" for your AI agents.
+TimeMachine is a time-travel debugger for LangGraph agents that records executions and enables powerful "what if" scenario analysis. Think of it as a flight recorder + counterfactual experiment lab for your AI agents.
 
 ## 🚀 Quick Start
 
@@ -18,9 +18,8 @@ source venv/bin/activate  # Linux/Mac
 pip install -r requirements.txt
 ```
 
-### Basic Usage
+### Step 1: Record Your Agent
 
-#### Method 1: Decorator (Recommended)
 ```python
 import timemachine
 from langgraph.graph import StateGraph
@@ -28,224 +27,196 @@ from langgraph.graph import StateGraph
 @timemachine.record("my_recordings.db")
 def create_my_agent():
     graph = StateGraph(MyState)
-    graph.add_node("step1", my_function)
-    graph.add_node("step2", another_function)
-    # ... add edges ...
-    return graph  # Return StateGraph, not compiled
+    # ... configure your graph ...
+    return graph
 
-# Use your agent normally
+# Your recordings happen automatically
 agent = create_my_agent()
-result = agent.invoke({"messages": [], "data": "test"})
+result = agent.invoke({"messages": [HumanMessage("Hello")]})
 ```
 
-#### Method 2: Direct Wrapping
+### Step 2: Run "What If" Experiments
+
 ```python
-import timemachine
+from timemachine.replay import CounterfactualEngine
 
-# Wrap your existing graph
-graph = StateGraph(MyState)
-# ... build your graph ...
+engine = CounterfactualEngine()
 
-tm_graph = timemachine.TimeMachineGraph(graph, "recordings.db")
-agent = tm_graph.compile()
-result = agent.invoke(initial_state)
+# What if we used different models?
+model_comparison = engine.analyze_model_alternatives("execution_id", 
+    ["gpt-3.5-turbo", "gpt-4", "claude-3-sonnet"])
+
+# What if we used different temperatures?
+temp_analysis = engine.analyze_temperature_sensitivity("execution_id", 
+    [0.1, 0.5, 0.9])
+
+print(f"Best scenario: {model_comparison.best_scenario.scenario.name}")
 ```
 
-#### Method 3: Context Manager
+## ✨ Core Features
+
+### 🎯 Phase 1: Core Recording (COMPLETE)
+- **Node Execution Recording** - Captures input/output state for every LangGraph node
+- **State Serialization** - Handles complex LangChain objects (BaseMessage, etc.)
+- **SQLite Storage** - Persistent, queryable execution history
+- **Multiple Integration Methods** - Decorator, context manager, or direct wrapping
+- **Error Handling** - Graceful recording even when nodes fail
+
+### 🎮 Phase 2: "What If" Games (COMPLETE)  
+- **Counterfactual Analysis** - Pure "what if" scenario testing
+- **Model Alternatives** - Compare different AI models (GPT-4 vs GPT-3.5 vs Claude)
+- **Temperature Sensitivity** - Test how creativity settings affect outputs
+- **Prompt Variations** - Experiment with different prompt formulations
+- **Parameter Sweeps** - Try ranges of parameter values
+- **Replay Engine** - Re-execute scenarios with modifications
+
+### **Phase 2.5: In depth test**
+
+Test with a real agent with real LLM calls. 
+Implement counterfactuals with REAL LLM calls if needed.
+
+## 🎮 "What If" Examples
+
+### Model Comparison
 ```python
-import timemachine
+from timemachine.replay import CounterfactualEngine
 
-with timemachine.recording("context_recordings.db"):
-    agent = create_my_agent()
-    result = agent.invoke(initial_state)
+engine = CounterfactualEngine()
+
+# Compare different AI models
+comparison = engine.analyze_model_alternatives("execution_123", 
+    ["gpt-3.5-turbo", "gpt-4", "claude-3-sonnet"])
+
+print(f"Tested {len(comparison.scenarios)} models")
+print(f"Best result: {comparison.best_scenario.scenario.name}")
+for insight in comparison.insights:
+    print(f"- {insight}")
 ```
 
-## 📁 Project Structure
+### Temperature Sensitivity
+```python
+# Test how creativity affects outputs
+temp_analysis = engine.analyze_temperature_sensitivity("execution_123", 
+    [0.1, 0.5, 0.9])
 
-### Current Structure (Phase 1)
-```
-time-machine/
-├── timemachine/              # Core TimeMachine library
-│   ├── __init__.py          # Public API
-│   ├── recorder.py          # SQLite recording engine
-│   ├── wrapper.py           # Node and graph wrappers
-│   ├── serializer.py        # State serialization
-│   └── decorator.py         # Integration decorators
-├── test/                    # Test suite
-│   ├── README.md           # Test documentation
-│   ├── run_all_tests.py    # Test runner
-│   ├── test_basic_functionality.py
-│   ├── test_serialization.py
-│   ├── test_decorator_integration.py
-│   ├── test_context_manager.py
-│   └── test_demo_sample_agent.py
-├── sample_agent.py         # Example LangGraph agent
-├── architecture.md         # Technical architecture
-├── requirements.txt        # Python dependencies
-├── .gitignore             # Git ignore patterns
-└── README.txt             # This file
+print("Temperature effects:")
+for scenario in temp_analysis.scenarios:
+    temp = scenario.scenario.modifications['temperature']
+    change = scenario.replay_result.output_difference_score
+    print(f"  Temperature {temp}: {change:.1%} output change")
 ```
 
-### Future Structure (Full Product)
+### Prompt Experiments
+```python
+# Test different prompt formulations
+prompts = [
+    {"content": "Be creative and detailed", "description": "Creative"},
+    {"content": "Be concise and factual", "description": "Factual"},
+    {"content": "Use examples and analogies", "description": "Educational"}
+]
+
+prompt_analysis = engine.analyze_prompt_variations("execution_123", prompts)
+print(f"Best prompt approach: {prompt_analysis.best_scenario.scenario.name}")
+```
+
+### Parameter Sweeps
+```python
+# Test ranges of values systematically
+max_tokens_sweep = engine.analyze_parameter_sweep("execution_123",
+    "max_tokens", [50, 100, 200, 500])
+
+print("Token limit effects:")
+for scenario in max_tokens_sweep.scenarios:
+    tokens = scenario.scenario.modifications['max_tokens']
+    output_len = len(scenario.replay_result.replayed_output.get('content', ''))
+    print(f"  Max {tokens} tokens → {output_len} chars output")
+```
+
+## 🎯 Why TimeMachine?
+
+### For Developers
+- **Debug Complex Flows** - See exactly what happened in each node
+- **Test "What If" Scenarios** - Safely experiment with different parameters
+- **Compare Approaches** - Evaluate model alternatives without rebuilding
+- **Understand Sensitivity** - See how small changes affect outputs
+
+### For Teams  
+- **Collaborative Experimentation** - Share counterfactual analyses
+- **Safe Parameter Tuning** - Test configurations without risking production
+- **Model Selection** - Compare AI models systematically
+- **Prompt Engineering** - Optimize prompts through systematic testing
+
+## 🏗️ Architecture
+
+TimeMachine operates in two simplified phases:
+
+1. **Recording Phase** - Captures all node executions with full state
+2. **"What If" Phase** - Enables counterfactual scenario analysis
+
+### Current Structure (Phase 2)
 ```
 time-machine/
 ├── timemachine/
-│   ├── __init__.py           # Main API exports
-│   ├── core/                 # Core recording functionality
-│   │   ├── __init__.py
+│   ├── __init__.py           # Main API exports  
+│   ├── core/                 # Phase 1: Core recording
 │   │   ├── recorder.py       # Database operations
-│   │   ├── wrapper.py        # Node instrumentation
+│   │   ├── wrapper.py        # Node instrumentation  
 │   │   ├── serializer.py     # State serialization
 │   │   └── decorator.py      # Integration helpers
-│   ├── analysis/             # Phase 2: Data analysis
-│   │   ├── __init__.py
-│   │   ├── llm_tracker.py    # LLM call detection
-│   │   ├── cost_analyzer.py  # Token/cost tracking
-│   │   └── patterns.py       # Pattern detection
-│   ├── replay/               # Phase 2: Counterfactual engine
-│   │   ├── __init__.py
-│   │   ├── engine.py         # Replay orchestration
-│   │   ├── counterfactual.py # "What if" scenarios
-│   │   └── cache.py          # Response caching
-│   ├── web/                  # Phase 3: Web UI backend
-│   │   ├── __init__.py
-│   │   ├── api.py            # FastAPI routes
-│   │   ├── models.py         # Pydantic models
-│   │   └── auth.py           # Authentication
-│   └── utils/                # Shared utilities
-│       ├── __init__.py
-│       ├── config.py         # Configuration management
-│       ├── exceptions.py     # Custom exceptions
-│       └── validators.py     # Input validation
-├── web/                      # Phase 3: Web UI frontend
-│   ├── package.json
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   └── api/
-│   └── public/
-├── cli/                      # Command-line interface
-│   ├── __init__.py
-│   ├── main.py              # Entry point
-│   ├── commands/
-│   │   ├── record.py        # Recording commands
-│   │   ├── replay.py        # Replay commands
-│   │   └── analyze.py       # Analysis commands
-├── examples/                 # Usage examples
-│   ├── basic_usage.py
-│   ├── advanced_agent.py
-│   └── integrations/
-│       ├── langchain_example.py
-│       └── llamaindex_example.py
-├── test/                     # Tests
-├── docs/                     # Documentation
-│   ├── source/
-│   ├── build/
-│   └── api/
-└── scripts/                  # Development scripts
-    ├── setup.py
-    ├── build.py
-    └── deploy.py
+│   └── replay/               # Phase 3: "What if" games
+│       ├── engine.py         # Replay orchestration
+│       └── counterfactual.py # Counterfactual scenarios
+├── test/                     # Simplified test suite
+├── sample_agent.py           # Demo LangGraph agent
+└── requirements.txt          # Dependencies
 ```
 
 ## 🔍 What Gets Recorded
 
 TimeMachine captures comprehensive execution data:
 
-### Node Execution Records
-- **Execution ID**: Unique identifier for each node execution
-- **Graph Run ID**: Groups all nodes from a single graph execution
-- **Node Name**: Which node was executed
-- **Timestamp**: When execution started
-- **Input State**: Complete state passed to the node (JSON serialized)
-- **Output State**: Complete state returned by the node (JSON serialized)
-- **Duration**: Execution time in milliseconds
-- **Status**: success/error/interrupted
-- **Error Messages**: Full error details if execution failed
+### Node Execution Details
+- **Input State** - Complete state before node execution
+- **Output State** - Complete state after node execution  
+- **Execution Metadata** - Timestamps, duration, success/failure
+- **Error Information** - Full error details when nodes fail
+- **Graph Structure** - Node relationships and execution order
 
-### State Serialization
-- **LangChain Messages**: Proper handling of HumanMessage, AIMessage, SystemMessage
-- **Complex Objects**: Nested dictionaries and lists
-- **Type Preservation**: Message types and metadata maintained
-- **JSON Storage**: Human-readable database format
+### State Information
+- **LangChain Messages** - Full message history with metadata
+- **Custom State Fields** - All TypedDict fields in your state
+- **Complex Objects** - Proper serialization of nested data structures
 
-## 🧪 Testing
+## 🛠️ Integration Methods
 
-### Run All Tests
-```bash
-python test/run_all_tests.py
-```
-
-### Run Individual Tests
-```bash
-python test/test_basic_functionality.py     # Core functionality
-python test/test_serialization.py          # State serialization
-python test/test_decorator_integration.py  # Decorator approach
-python test/test_context_manager.py        # Context manager
-python test/test_demo_sample_agent.py      # Complete demo
-```
-
-### Test Coverage
-- ✅ Node execution recording
-- ✅ State serialization/deserialization
-- ✅ Error handling and recovery
-- ✅ All integration methods
-- ✅ LangChain message handling
-- ✅ Multi-node graph execution
-- ✅ Database persistence
-
-## 📊 Viewing Recordings
-
-### Programmatic Access
+### Method 1: Decorator (Recommended)
 ```python
-import timemachine
+@timemachine.record("recordings.db")
+def create_agent():
+    graph = StateGraph(ChatState)
+    # ... build graph ...
+    return graph  # Return StateGraph, not compiled
 
-# Access recordings
-recorder = timemachine.TimeMachineRecorder("my_recordings.db")
-
-# List all graph runs
-runs = recorder.list_graph_runs()
-print(f"Found {len(runs)} graph executions")
-
-# Get detailed execution data
-for run in runs:
-    graph_run_id = run['graph_run_id']
-    executions = recorder.get_graph_executions(graph_run_id)
-    
-    print(f"Graph run {graph_run_id[:8]}...")
-    for execution in executions:
-        print(f"  - {execution['node_name']}: {execution['status']} ({execution['duration_ms']}ms)")
+agent = create_agent()  # Auto-compiles with recording
 ```
 
-### Database Schema
-SQLite database with three main tables:
-- **`node_executions`**: Main execution records
-- **`llm_calls`**: LLM interaction tracking (ready for Phase 2)
-- **`graph_snapshots`**: Graph topology storage
+### Method 2: Context Manager
+```python
+with timemachine.recording("recordings.db"):
+    agent = create_agent()
+    result = agent.invoke({"messages": [HumanMessage("Hello")]})
+```
 
-## 🏗️ Architecture
+### Method 3: Direct Wrapping
+```python
+graph = StateGraph(ChatState)
+# ... build graph ...
 
-TimeMachine follows a modular architecture:
+tm_graph = timemachine.TimeMachineGraph(graph, "recordings.db")
+agent = tm_graph.compile()
+```
 
-### Core Components
-1. **TimeMachineNodeWrapper**: Wraps individual node functions for recording
-2. **TimeMachineGraph**: Wraps entire StateGraph for automatic instrumentation
-3. **TimeMachineRecorder**: Manages SQLite database operations
-4. **StateSerializer**: Handles complex state object serialization
-
-### Integration Methods
-1. **Decorator**: `@timemachine.record()` - Zero-code-change approach
-2. **Direct Wrapping**: `TimeMachineGraph(graph)` - Explicit control
-3. **Context Manager**: `with timemachine.recording():` - Scope-based recording
-
-### Key Features
-- **Zero-Code-Change Integration**: Use decorators for existing agents
-- **Automatic State Handling**: Complex LangGraph states serialized properly
-- **Error Recovery**: Failed executions properly recorded with error details
-- **Performance Tracking**: Millisecond-precision timing data
-- **Cross-Platform**: Works on Windows, Linux, and macOS
-
-## 🔧 Implementation Status
+## 📈 Development Status
 
 ### ✅ Phase 1: Core Recording (COMPLETE)
 - [x] Node execution recording
@@ -255,16 +226,13 @@ TimeMachine follows a modular architecture:
 - [x] Error handling
 - [x] Comprehensive testing
 
-### 🚧 Phase 2: LLM Integration (PLANNED)
-- [ ] LLM call detection within nodes
-- [ ] Model parameter extraction
-- [ ] Token usage tracking
-- [ ] Cost estimation
-- [ ] Response caching
-
-### **Phase 2.5: Simplification (Next)**
-
-Cut out unnecessary features like caching responses and tracking AI, and finding problems and waste. Focus only on "what if" games.
+### ✅ Phase 2: Simplified "What If" Games (COMPLETE)
+- [x] Counterfactual analysis engine
+- [x] Model alternatives comparison
+- [x] Temperature sensitivity testing
+- [x] Prompt variation experiments
+- [x] Parameter sweep analysis
+- [x] Replay engine for modifications
 
 ### 🚧 Phase 3: Web UI (PLANNED)
 - [ ] Web-based execution viewer
@@ -301,31 +269,34 @@ python test/test_demo_sample_agent.py
 cp .env.example .env
 
 # Add your OpenAI API key
-OPENAI_API_KEY=your_key_here
+# OPENAI_API_KEY=your_key_here
 ```
 
 ### Running Tests
-All tests are designed to work without external API calls (using mocks).
+```bash
+# Run all tests
+python test/run_all_tests.py
+
+# Run specific tests
+python test/test_basic_functionality.py
+python test/test_phase2_replay.py
+```
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run the test suite: `python test/run_all_tests.py`
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Run tests to ensure everything works
+4. Commit your changes (`git commit -m 'Add amazing feature'`)
+5. Push to the branch (`git push origin feature/amazing-feature`)
+6. Open a Pull Request
 
 ## 📄 License
 
-[License information would go here]
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🙋 Support
+## 🙏 Acknowledgments
 
-For questions, issues, or feature requests:
-1. Check the `test/` directory for examples
-2. Review `architecture.md` for technical details
-3. Open an issue on the repository
-
----
-
-**TimeMachine** - Making LangGraph agent debugging as easy as time travel! 🕰️
+- LangGraph team for the excellent agent framework
+- LangChain team for the foundational components
+- The open-source community for inspiration and feedback
