@@ -4,4 +4,6 @@ Run ".\venv\Scripts\activate" in the terminal before running any commands.
 When making changes, always make the most concise changes.
 Write clean code and use DRY (Don't Repeat Yourself) standards.
 
-Always refer to /.README when before making changes.
+Always refer to /README.txt when before making changes.
+
+After making changes, always update these files: /README.txt, docs\architecture.md, docs\summary.md
