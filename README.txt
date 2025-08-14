@@ -1,213 +1,264 @@
-TimeMachine MVP - Simplified Architecture
+# TimeMachine - Time-Travel Debugger for LangGraph Agents
 
-TimeMachine is a time-travel debugger for LangChain agents that records every AI decision with full context, 
-allowing you to replay exactly what happened and test what would have happened with different settings. 
-When your AI agent gives a wrong answer in production, instead of guessing why, you can replay that exact moment 
-and see what GPT-4 would have said, or what would have happened with lower temperature - turning hours of debugging into seconds.
+TimeMachine is a comprehensive debugging and recording system for LangGraph agents that captures every node execution with full state tracking. Think of it as a "flight recorder" for your AI agents.
 
-This project is designed to work on all types of agents, ranging from simple to complex.
+## 🚀 Quick Start
 
-WHAT YOU ACTUALLY NEED FOR MVP
--------------------------------
+### Installation
+```bash
+# Clone the repository
+git clone <repository-url>
+cd time-machine
 
-CORE FEATURES (Must Have)
--------------------------
-1. Record LangChain agent decisions
-2. Replay those decisions exactly
-3. Test basic counterfactuals (different model/temperature)
-4. Simple web UI to view recordings
+# Activate virtual environment
+.\venv\Scripts\activate  # Windows
+source venv/bin/activate  # Linux/Mac
 
-WHAT TO CUT FROM MVP
---------------------
-- Cold storage (not needed - users won't have 30+ day old data yet)
-- Warm storage (probably not needed - SQLite can handle first few thousand users)
-- Pattern detector (nice to have, not essential for proving value)
-- Query engine (just use SQLite queries directly)
-- Fancy analytics (save for later)
-- Team collaboration (single user is fine)
-- Compliance exports (enterprise feature)
+# Install dependencies (already included in venv)
+pip install -r requirements.txt
+```
 
-MVP ARCHITECTURE (Simplified)
-------------------------------
+### Basic Usage
 
-1. RECORDER
-  - Simple LangChain callback handler
-  - Captures: inputs, outputs, model config, timestamps
-  - Stores in local SQLite database
-  - Skip: tool calls, retrieved docs (add later if needed)
+#### Method 1: Decorator (Recommended)
+```python
+import timemachine
+from langgraph.graph import StateGraph
 
-2. STORAGE
-  - Just SQLite for everything
-  - One table for decisions
-  - One table for metadata
-  - Auto-delete after 7 days (keep it simple)
-  - ~1GB should handle thousands of decisions
+@timemachine.record("my_recordings.db")
+def create_my_agent():
+    graph = StateGraph(MyState)
+    graph.add_node("step1", my_function)
+    graph.add_node("step2", another_function)
+    # ... add edges ...
+    return graph  # Return StateGraph, not compiled
 
-3. REPLAY ENGINE (Simplified)
-  - Store the exact prompt + model name + temperature
-  - For replay: just call the same model with same inputs
-  - Skip: model versioning, deterministic seeds (accept some variance)
+# Use your agent normally
+agent = create_my_agent()
+result = agent.invoke({"messages": [], "data": "test"})
+```
 
-4. BASIC COUNTERFACTUALS
-  - Only support: change model (GPT-3.5 vs GPT-4)
-  - Only support: change temperature
-  - That's it - proves the concept
+#### Method 2: Direct Wrapping
+```python
+import timemachine
 
-5. MINIMAL WEB UI
-  - List view of recordings
-  - Click to see details
-  - "Replay" button
-  - "Try with GPT-4" button
-  - Simple before/after comparison
+# Wrap your existing graph
+graph = StateGraph(MyState)
+# ... build your graph ...
 
-IMPLEMENTATION (2-3 WEEKS SOLO)
---------------------------------
+tm_graph = timemachine.TimeMachineGraph(graph, "recordings.db")
+agent = tm_graph.compile()
+result = agent.invoke(initial_state)
+```
 
-Week 1: Core Functionality
-- Day 1-2: LangChain callback handler
-- Day 3-4: SQLite storage schema
-- Day 5-7: Basic replay (call model again)
+#### Method 3: Context Manager
+```python
+import timemachine
 
-Week 2: Counterfactuals + API
-- Day 1-2: Model swapping logic
-- Day 3-4: Temperature adjustment
-- Day 5-7: REST API with FastAPI
+with timemachine.recording("context_recordings.db"):
+    agent = create_my_agent()
+    result = agent.invoke(initial_state)
+```
 
-Week 3: Basic UI
-- Day 1-3: List view of recordings
-- Day 4-5: Replay interface
-- Day 6-7: Polish and deploy
+## 📁 Project Structure
 
-FILE STRUCTURE
---------------
-timemachine/
- __init__.py           # Main TimeMachine class
- recorder.py           # LangChain callback
- storage.py            # SQLite interface
- replay.py             # Replay logic
- api.py                # FastAPI routes
- 
-web/
- index.html            # Could even be single HTML file
- app.js                # Vanilla JS or simple React
- 
-examples/
- basic_usage.py        # Demo script
+```
+time-machine/
+├── timemachine/              # Core TimeMachine library
+│   ├── __init__.py          # Public API
+│   ├── recorder.py          # SQLite recording engine
+│   ├── wrapper.py           # Node and graph wrappers
+│   ├── serializer.py        # State serialization
+│   └── decorator.py         # Integration decorators
+├── test/                    # Test suite
+│   ├── README.md           # Test documentation
+│   ├── run_all_tests.py    # Test runner
+│   ├── test_basic_functionality.py
+│   ├── test_serialization.py
+│   ├── test_decorator_integration.py
+│   ├── test_context_manager.py
+│   └── test_demo_sample_agent.py
+├── sample_agent.py         # Example LangGraph agent
+├── architecture.md         # Technical architecture
+├── requirements.txt        # Python dependencies
+├── .gitignore             # Git ignore patterns
+└── README.txt             # This file
+```
 
-DATABASE SCHEMA (SQLite)
-------------------------
-decisions table:
-- id (TEXT PRIMARY KEY)
-- timestamp (INTEGER)
-- input (TEXT - JSON)
-- output (TEXT)
-- model (TEXT)
-- temperature (REAL)
-- total_tokens (INTEGER)
-- cost (REAL)
-- duration_ms (INTEGER)
+## 🔍 What Gets Recorded
 
-metadata table:
-- decision_id (TEXT)
-- key (TEXT)
-- value (TEXT)
+TimeMachine captures comprehensive execution data:
 
-MINIMAL CODE EXAMPLE
---------------------
-# recorder.py
-from langchain.callbacks.base import BaseCallbackHandler
-import sqlite3
-import json
-import uuid
+### Node Execution Records
+- **Execution ID**: Unique identifier for each node execution
+- **Graph Run ID**: Groups all nodes from a single graph execution
+- **Node Name**: Which node was executed
+- **Timestamp**: When execution started
+- **Input State**: Complete state passed to the node (JSON serialized)
+- **Output State**: Complete state returned by the node (JSON serialized)
+- **Duration**: Execution time in milliseconds
+- **Status**: success/error/interrupted
+- **Error Messages**: Full error details if execution failed
 
-class TimeMachineCallback(BaseCallbackHandler):
-   def __init__(self, db_path="timemachine.db"):
-       self.db = sqlite3.connect(db_path)
-       self.current_decision = {}
-       
-   def on_llm_start(self, serialized, prompts, **kwargs):
-       self.current_decision = {
-           "id": str(uuid.uuid4()),
-           "timestamp": time.time(),
-           "input": prompts[0],
-           "model": kwargs.get("invocation_params", {}).get("model_name"),
-           "temperature": kwargs.get("invocation_params", {}).get("temperature")
-       }
-   
-   def on_llm_end(self, response, **kwargs):
-       self.current_decision["output"] = response.generations[0][0].text
-       self.save_decision()
-       
-   def save_decision(self):
-       # Save to SQLite
-       pass
+### State Serialization
+- **LangChain Messages**: Proper handling of HumanMessage, AIMessage, SystemMessage
+- **Complex Objects**: Nested dictionaries and lists
+- **Type Preservation**: Message types and metadata maintained
+- **JSON Storage**: Human-readable database format
 
-# replay.py  
-def replay_decision(decision_id):
-   # Load from DB
-   decision = load_decision(decision_id)
-   
-   # Call same model with same params
-   llm = ChatOpenAI(
-       model=decision["model"],
-       temperature=decision["temperature"]
-   )
-   return llm.predict(decision["input"])
+## 🧪 Testing
 
-def counterfactual(decision_id, model=None, temperature=None):
-   decision = load_decision(decision_id)
-   
-   # Override params
-   if model:
-       decision["model"] = model
-   if temperature:
-       decision["temperature"] = temperature
-       
-   # Run with new params
-   llm = ChatOpenAI(
-       model=decision["model"],
-       temperature=decision["temperature"]
-   )
-   return llm.predict(decision["input"])
+### Run All Tests
+```bash
+python test/run_all_tests.py
+```
 
-WHAT SUCCESS LOOKS LIKE
------------------------
-- Developer installs package
-- Adds one line to their code
-- Runs their agent
-- Opens localhost:8000
-- Sees their agent decisions
-- Clicks replay, sees it work
-- Tries "What if GPT-4?", sees different result
-- "Holy shit this is useful"
-- Shares with team
-- Upgrades to paid tier
+### Run Individual Tests
+```bash
+python test/test_basic_functionality.py     # Core functionality
+python test/test_serialization.py          # State serialization
+python test/test_decorator_integration.py  # Decorator approach
+python test/test_context_manager.py        # Context manager
+python test/test_demo_sample_agent.py      # Complete demo
+```
 
-WHAT TO PUNT TO V2
-------------------
-- Multi-agent chains
-- Tool call recording  
-- Document retrieval tracking
-- Advanced counterfactuals
-- Pattern detection
-- Team features
-- Cloud storage
-- Compliance stuff
+### Test Coverage
+- ✅ Node execution recording
+- ✅ State serialization/deserialization
+- ✅ Error handling and recovery
+- ✅ All integration methods
+- ✅ LangChain message handling
+- ✅ Multi-node graph execution
+- ✅ Database persistence
 
-WHY THIS WORKS AS MVP
----------------------
-1. Solves real problem (debugging production AI)
-2. Simple enough to build in 2-3 weeks
-3. Impressive enough for demo
-4. Clear upgrade path to full version
-5. Validates core hypothesis (replay is valuable)
+## 📊 Viewing Recordings
 
-QUICK SANITY CHECK
------------------
-- Can you record decisions? ✓ (LangChain callbacks)
-- Can you replay them? ✓ (Just call API again)
-- Can you test alternatives? ✓ (Change params and call)
-- Can users see value? ✓ (Simple UI)
-- Can you ship in <1 month? ✓ (Yes with focus)
+### Programmatic Access
+```python
+import timemachine
 
-SKIP THE COMPLEXITY, SHIP THE VALUE
+# Access recordings
+recorder = timemachine.TimeMachineRecorder("my_recordings.db")
+
+# List all graph runs
+runs = recorder.list_graph_runs()
+print(f"Found {len(runs)} graph executions")
+
+# Get detailed execution data
+for run in runs:
+    graph_run_id = run['graph_run_id']
+    executions = recorder.get_graph_executions(graph_run_id)
+    
+    print(f"Graph run {graph_run_id[:8]}...")
+    for execution in executions:
+        print(f"  - {execution['node_name']}: {execution['status']} ({execution['duration_ms']}ms)")
+```
+
+### Database Schema
+SQLite database with three main tables:
+- **`node_executions`**: Main execution records
+- **`llm_calls`**: LLM interaction tracking (ready for Phase 2)
+- **`graph_snapshots`**: Graph topology storage
+
+## 🏗️ Architecture
+
+TimeMachine follows a modular architecture:
+
+### Core Components
+1. **TimeMachineNodeWrapper**: Wraps individual node functions for recording
+2. **TimeMachineGraph**: Wraps entire StateGraph for automatic instrumentation
+3. **TimeMachineRecorder**: Manages SQLite database operations
+4. **StateSerializer**: Handles complex state object serialization
+
+### Integration Methods
+1. **Decorator**: `@timemachine.record()` - Zero-code-change approach
+2. **Direct Wrapping**: `TimeMachineGraph(graph)` - Explicit control
+3. **Context Manager**: `with timemachine.recording():` - Scope-based recording
+
+### Key Features
+- **Zero-Code-Change Integration**: Use decorators for existing agents
+- **Automatic State Handling**: Complex LangGraph states serialized properly
+- **Error Recovery**: Failed executions properly recorded with error details
+- **Performance Tracking**: Millisecond-precision timing data
+- **Cross-Platform**: Works on Windows, Linux, and macOS
+
+## 🔧 Implementation Status
+
+### ✅ Phase 1: Core Recording (COMPLETE)
+- [x] Node execution recording
+- [x] State serialization
+- [x] SQLite storage
+- [x] Multiple integration methods
+- [x] Error handling
+- [x] Comprehensive testing
+
+### 🚧 Phase 2: LLM Integration (PLANNED)
+- [ ] LLM call detection within nodes
+- [ ] Model parameter extraction
+- [ ] Token usage tracking
+- [ ] Cost estimation
+- [ ] Response caching
+
+### 🚧 Phase 3: Web UI (PLANNED)
+- [ ] Web-based execution viewer
+- [ ] State inspection interface
+- [ ] Timeline visualization
+- [ ] Debugging tools
+- [ ] Export capabilities
+
+## 📝 Sample Agent
+
+The repository includes `sample_agent.py` - a simple two-step LangGraph agent that:
+1. Asks for a topic (or uses mock input in tests)
+2. Generates an AI response about that topic
+
+Perfect for testing TimeMachine integration:
+
+```python
+# Run with TimeMachine recording
+python test/test_demo_sample_agent.py
+```
+
+## 🛠️ Development
+
+### Requirements
+- Python 3.11+
+- LangGraph 0.2.68+
+- LangChain Core 0.3.74+
+- SQLAlchemy 2.0.43+
+- OpenAI API key (for sample agent)
+
+### Environment Setup
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Add your OpenAI API key
+OPENAI_API_KEY=your_key_here
+```
+
+### Running Tests
+All tests are designed to work without external API calls (using mocks).
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run the test suite: `python test/run_all_tests.py`
+5. Submit a pull request
+
+## 📄 License
+
+[License information would go here]
+
+## 🙋 Support
+
+For questions, issues, or feature requests:
+1. Check the `test/` directory for examples
+2. Review `architecture.md` for technical details
+3. Open an issue on the repository
+
+---
+
+**TimeMachine** - Making LangGraph agent debugging as easy as time travel! 🕰️
