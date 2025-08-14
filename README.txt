@@ -62,6 +62,7 @@ with timemachine.recording("context_recordings.db"):
 
 ## 📁 Project Structure
 
+### Current Structure (Phase 1)
 ```
 time-machine/
 ├── timemachine/              # Core TimeMachine library
@@ -83,6 +84,68 @@ time-machine/
 ├── requirements.txt        # Python dependencies
 ├── .gitignore             # Git ignore patterns
 └── README.txt             # This file
+```
+
+### Future Structure (Full Product)
+```
+time-machine/
+├── timemachine/
+│   ├── __init__.py           # Main API exports
+│   ├── core/                 # Core recording functionality
+│   │   ├── __init__.py
+│   │   ├── recorder.py       # Database operations
+│   │   ├── wrapper.py        # Node instrumentation
+│   │   ├── serializer.py     # State serialization
+│   │   └── decorator.py      # Integration helpers
+│   ├── analysis/             # Phase 2: Data analysis
+│   │   ├── __init__.py
+│   │   ├── llm_tracker.py    # LLM call detection
+│   │   ├── cost_analyzer.py  # Token/cost tracking
+│   │   └── patterns.py       # Pattern detection
+│   ├── replay/               # Phase 2: Counterfactual engine
+│   │   ├── __init__.py
+│   │   ├── engine.py         # Replay orchestration
+│   │   ├── counterfactual.py # "What if" scenarios
+│   │   └── cache.py          # Response caching
+│   ├── web/                  # Phase 3: Web UI backend
+│   │   ├── __init__.py
+│   │   ├── api.py            # FastAPI routes
+│   │   ├── models.py         # Pydantic models
+│   │   └── auth.py           # Authentication
+│   └── utils/                # Shared utilities
+│       ├── __init__.py
+│       ├── config.py         # Configuration management
+│       ├── exceptions.py     # Custom exceptions
+│       └── validators.py     # Input validation
+├── web/                      # Phase 3: Web UI frontend
+│   ├── package.json
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   └── api/
+│   └── public/
+├── cli/                      # Command-line interface
+│   ├── __init__.py
+│   ├── main.py              # Entry point
+│   ├── commands/
+│   │   ├── record.py        # Recording commands
+│   │   ├── replay.py        # Replay commands
+│   │   └── analyze.py       # Analysis commands
+├── examples/                 # Usage examples
+│   ├── basic_usage.py
+│   ├── advanced_agent.py
+│   └── integrations/
+│       ├── langchain_example.py
+│       └── llamaindex_example.py
+├── test/                     # Tests
+├── docs/                     # Documentation
+│   ├── source/
+│   ├── build/
+│   └── api/
+└── scripts/                  # Development scripts
+    ├── setup.py
+    ├── build.py
+    └── deploy.py
 ```
 
 ## 🔍 What Gets Recorded

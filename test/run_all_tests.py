@@ -65,17 +65,22 @@ def cleanup_all_test_files():
 
 def main():
     """Run all tests and provide summary"""
-    print("[TEST] TimeMachine Test Suite Runner")
+    print("[TEST] TimeMachine Complete Test Suite Runner (Phase 1 & 2)")
     print("=" * 60)
     
     # Get all test files
     test_dir = Path(__file__).parent
     test_files = [
+        # Phase 1 Tests
         "test/test_basic_functionality.py",
         "test/test_serialization.py", 
         "test/test_decorator_integration.py",
         "test/test_context_manager.py",
-        "test/test_demo_sample_agent.py"
+        "test/test_demo_sample_agent.py",
+        
+        # Phase 2 Tests
+        "test/test_phase2_llm_tracking.py",
+        "test/test_phase2_replay.py"
     ]
     
     try:
@@ -103,8 +108,18 @@ def main():
         
         print(f"\nOverall: {passed_tests}/{total_tests} tests passed")
         
+        # Categorize results by phase
+        phase1_files = [f for f in test_files if "phase2" not in f]
+        phase2_files = [f for f in test_files if "phase2" in f]
+        
+        phase1_passed = sum(1 for f in phase1_files if results[f]['passed'])
+        phase2_passed = sum(1 for f in phase2_files if results[f]['passed'])
+        
+        print(f"\nPhase 1 (Core Recording): {phase1_passed}/{len(phase1_files)} passed")
+        print(f"Phase 2 (Analysis & Replay): {phase2_passed}/{len(phase2_files)} passed")
+        
         if passed_tests == total_tests:
-            print("\n[SUCCESS] ALL TESTS PASSED! TimeMachine is working correctly.")
+            print("\n[SUCCESS] ALL TESTS PASSED! TimeMachine Phases 1 & 2 are working correctly.")
             return True
         else:
             print(f"\n[WARNING] {total_tests - passed_tests} test(s) failed. Check output above for details.")

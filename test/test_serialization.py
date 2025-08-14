@@ -13,7 +13,7 @@ from typing import Annotated, TypedDict
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, BaseMessage
 from langgraph.graph.message import add_messages
 
-from timemachine.serializer import StateSerializer
+from timemachine.core.serializer import StateSerializer
 
 class ComplexState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]

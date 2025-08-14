@@ -1,20 +1,22 @@
 # TimeMachine Test Suite
 
-This directory contains all tests and demos for the TimeMachine system.
+This directory contains comprehensive tests for the TimeMachine system (Phase 1 & 2).
 
 ## Test Files
 
-### Core Functionality Tests
-- **`test_basic_functionality.py`** - Tests core node wrapping and recording capabilities
-- **`test_serialization.py`** - Tests state serialization for complex LangGraph objects  
-- **`test_decorator_integration.py`** - Tests the `@timemachine.record()` decorator
-- **`test_context_manager.py`** - Tests the `with timemachine.recording():` context manager
+### Phase 1: Core Functionality Tests
+- `test_basic_functionality.py` - Tests core node wrapping and recording
+- `test_serialization.py` - Tests state serialization/deserialization
+- `test_decorator_integration.py` - Tests @timemachine.record() decorator
+- `test_context_manager.py` - Tests with timemachine.recording(): context manager
+- `test_demo_sample_agent.py` - Integration test with sample agent
 
-### Demo and Integration Tests  
-- **`test_demo_sample_agent.py`** - Comprehensive demo showing all integration methods with sample agent functionality
+### Phase 2: Analysis & Replay Tests
+- `test_phase2_llm_tracking.py` - Tests LLM call detection, cost analysis, and pattern detection
+- `test_phase2_replay.py` - Tests replay engine and counterfactual analysis
 
 ### Test Runner
-- **`run_all_tests.py`** - Runs all tests and provides summary results
+- `run_all_tests.py` - Runs all tests and provides summary
 
 ## Running Tests
 
@@ -23,54 +25,48 @@ This directory contains all tests and demos for the TimeMachine system.
 python test/run_all_tests.py
 ```
 
-### Run Individual Tests
+### Run Individual Test Suites
 ```bash
+# Phase 1 tests
 python test/test_basic_functionality.py
-python test/test_serialization.py
 python test/test_decorator_integration.py
 python test/test_context_manager.py
+python test/test_serialization.py
 python test/test_demo_sample_agent.py
+
+# Phase 2 tests
+python test/test_phase2_llm_tracking.py
+python test/test_phase2_replay.py
 ```
 
-## Test Databases
+## Features Tested
 
-Tests create SQLite databases in the `test/` directory:
-- `test_basic.db` - Basic functionality tests
-- `test_decorator.db` - Decorator integration tests  
-- `test_context.db` - Context manager tests
-- `test_demo_*.db` - Demo approach databases
+### Phase 1: Core Recording
+1. **Node Instrumentation**: Wrapping LangGraph nodes to record executions
+2. **State Serialization**: Converting complex states to/from JSON
+3. **Database Recording**: Storing executions in SQLite
+4. **Integration Methods**: Decorator and context manager approaches
+5. **Error Handling**: Graceful handling of errors during recording
 
-## What Gets Tested
+### Phase 2: Analysis & Replay
+1. **LLM Call Detection**: Identifying and tracking LLM calls within nodes
+2. **Cost Analysis**: Calculating token usage and costs across models
+3. **Pattern Detection**: Finding inefficiencies and optimization opportunities
+4. **Replay Engine**: Re-executing recorded nodes with modifications
+5. **Counterfactual Analysis**: "What if" scenarios with different parameters
+6. **Response Caching**: Caching LLM responses for faster replays
 
-### ✅ Core Recording
-- Node execution recording
-- State serialization/deserialization
-- Error handling and recovery
-- Database persistence
+## Test Results Interpretation
 
-### ✅ Integration Methods
-- `@timemachine.record()` decorator
-- Direct `TimeMachineGraph` wrapping
-- `with timemachine.recording():` context manager
+- **[PASS]** - Test passed successfully
+- **[FAIL]** - Test failed, check error output
+- **[INFO]** - Informational message
+- **[WARNING]** - Warning message, test may have partial issues
 
-### ✅ Complex Scenarios
-- Multi-node graph execution
-- LangChain message handling
-- State flow between nodes
-- Execution timing and status tracking
+## Test Database Files
 
-## Test Output
+Tests create temporary SQLite database files with names like:
+- `test_*.db` - Temporary test databases
+- `timemachine_cache.db` - Response cache test database
 
-Tests use standardized prefixes:
-- `[TEST]` - Test execution messages
-- `[PASS]` - Success indicators  
-- `[FAIL]` - Failure indicators
-- `[INFO]` - Informational messages
-- `[DEMO]` - Demo execution messages
-
-## Requirements
-
-All tests require:
-- Python virtual environment activated (`.\venv\Scripts\activate`)
-- Required dependencies from `requirements.txt`
-- Project root in Python path (handled automatically by test files)
+These are automatically cleaned up after test runs.
