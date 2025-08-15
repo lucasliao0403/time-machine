@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, PlayCircle, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Calendar, PlayCircle, CheckCircle, AlertCircle, RefreshCw, Clock, Zap } from 'lucide-react';
 import { GraphRun } from '@/types';
 import api from '@/lib/api';
 
@@ -37,111 +38,189 @@ const GraphRunsList: React.FC<GraphRunsListProps> = ({ onRunSelect, selectedRun 
   const getStatusIcon = (status: GraphRun['status']) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
+        return <CheckCircle className="h-5 w-5 text-success" />;
       case 'running':
-        return <PlayCircle className="h-5 w-5 text-blue-500" />;
+        return <PlayCircle className="h-5 w-5 text-info" />;
       case 'error':
-        return <AlertCircle className="h-5 w-5 text-red-500" />;
+        return <AlertCircle className="h-5 w-5 text-error" />;
       default:
-        return <CheckCircle className="h-5 w-5 text-gray-400" />;
+        return <CheckCircle className="h-5 w-5 text-glass-500" />;
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
-        <span className="ml-2 text-gray-600">Loading graph runs...</span>
-      </div>
+      <motion.div 
+        className="flex items-center justify-center py-16"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <div className="frosted-card px-8 py-6 text-center">
+          <RefreshCw className="h-8 w-8 animate-spin text-glass-200 mx-auto mb-3" />
+          <span className="text-glass-100 font-normal loading-dots">Loading graph runs</span>
+        </div>
+      </motion.div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <div className="flex items-center">
-          <AlertCircle className="h-5 w-5 text-red-400" />
-          <span className="ml-2 text-red-800">{error}</span>
+      <motion.div 
+        className="apple-glass-card border-error/20 p-6"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+      >
+        <div className="flex items-center mb-4">
+          <AlertCircle className="h-6 w-6 text-error" />
+          <span className="ml-3 text-glass-200 font-normal">{error}</span>
         </div>
-        <button
+        <motion.button
           onClick={loadGraphRuns}
-          className="mt-2 text-sm text-red-600 hover:text-red-800 transition-colors"
+          className="px-4 py-2 apple-glass-card text-gray-300 rounded-2xl transition-all"
+          whileHover={{}}
+          whileTap={{ scale: 0.98 }}
         >
           Try again
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
     );
   }
 
   if (runs.length === 0) {
     return (
-      <div className="text-center py-12">
-        <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No Graph Runs Found</h3>
-        <p className="text-gray-600 mb-4">
-          Run a TimeMachine-recorded agent to see execution data here.
-        </p>
-        <button
-          onClick={loadGraphRuns}
-          className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-        >
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </button>
-      </div>
+      <motion.div 
+        className="text-center py-16"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <div className="frosted-card p-12 max-w-md mx-auto">
+          <motion.div
+            animate={{ rotate: [0, 5, -5, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <Calendar className="h-16 w-16 text-glass-500 mx-auto mb-6" />
+          </motion.div>
+          <h3 className="text-xl font-light text-glass-200 mb-3">No Graph Runs Found</h3>
+          <p className="text-glass-400 mb-6 leading-relaxed font-light">
+            Run a TimeMachine-recorded agent to see execution data here.
+          </p>
+          <motion.button
+            onClick={loadGraphRuns}
+            className="inline-flex items-center px-6 py-3  text-glass-300 rounded-2xl  transition-all border border-accent-400/20 hover-glass"
+            whileHover={{}}
+            whileTap={{ scale: 0.98 }}
+          >
+          <RefreshCw className="h-5 w-5 mr-2" />
+            Refresh
+          </motion.button>
+        </div>
+      </motion.div>
     );
   }
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring" as const,
+        stiffness: 100,
+        damping: 12,
+      },
+    },
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">Graph Runs</h2>
-        <button
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-100 mb-1">Graph Runs</h2>
+          <p className="text-gray-300 font-medium">Recorded agent execution sessions</p>
+        </div>
+        <motion.button
           onClick={loadGraphRuns}
-          className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+          className="inline-flex items-center px-4 py-2 apple-glass-card text-sm font-medium text-gray-200 hover:text-gray-100 transition-all hover-minimal"
+          whileTap={{ scale: 0.98 }}
+          transition={{ type: "tween", duration: 0.15 }}
         >
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
-        </button>
+        </motion.button>
       </div>
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        <ul className="divide-y divide-gray-200">
-          {runs.map((run) => (
-            <li key={run.graph_run_id}>
-              <button
-                onClick={() => onRunSelect(run)}
-                className={`
-                  w-full text-left px-6 py-4 hover:bg-gray-50 focus:outline-none focus:bg-gray-50 transition-colors
-                  ${selectedRun?.graph_run_id === run.graph_run_id ? 'bg-primary-50 border-l-4 border-primary-500' : ''}
-                `}
+      {/* Animated Runs List - only this re-animates */}
+      <motion.div 
+        className="space-y-3"
+        key={runs.length} // Force re-animation only when runs change
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {runs.map((run, index) => (
+          <motion.div
+            key={run.graph_run_id}
+            variants={itemVariants}
+            custom={index}
+          >
+            <motion.button
+              onClick={() => onRunSelect(run)}
+              className="w-full text-left apple-glass-card px-6 py-5 focus:outline-none transition-all relative"
+                whileHover={{}}
+                whileTap={{ scale: 0.998 }}
               >
+                {selectedRun?.graph_run_id === run.graph_run_id && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1"></div>
+                )}
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    {getStatusIcon(run.status)}
+                  <div className="flex items-center space-x-4">
+                    <motion.div
+                      whileHover={{}}
+                      transition={{ type: "spring" as const, stiffness: 400, damping: 17 }}
+                    >
+                      {getStatusIcon(run.status)}
+                    </motion.div>
                     <div>
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-semibold text-gray-100 mb-1">
                         {run.graph_run_id}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-xs text-gray-300 flex items-center font-medium">
+                        <Clock className="h-3 w-3 mr-1" />
                         {formatDate(run.start_time)}
                       </div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-semibold text-gray-100 flex items-center justify-end">
+                      <Zap className="h-4 w-4 mr-1 text-gray-200" />
                       {run.execution_count} executions
                     </div>
-                    <div className="text-sm text-gray-500 capitalize">
+                    <div className={`
+                      text-xs capitalize px-3 py-1 rounded-full mt-1 font-medium
+                      ${run.status === 'completed' ? ' text-gray-200 border border-gray-400/40' :
+                        run.status === 'running' ? ' text-gray-200 border border-gray-500/40' :
+                        run.status === 'error' ? ' text-gray-200 border border-gray-600/40' :
+                        ' text-gray-200 border border-gray-400/30'
+                      }
+                    `}>
                       {run.status}
                     </div>
                   </div>
                 </div>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
+            </motion.button>
+          </motion.div>
+        ))}
+      </motion.div>
     </div>
   );
 };

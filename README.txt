@@ -1,6 +1,6 @@
-# TimeMachine - "What If" Games for LangGraph Agents
+# TimeMachine - Branch Testing for LangGraph Agents
 
-TimeMachine is a time-travel debugger for LangGraph agents that records executions and enables powerful "what if" scenario analysis. Think of it as a flight recorder + counterfactual experiment lab for your AI agents.
+TimeMachine is a time-travel debugger for LangGraph agents that records executions and enables powerful counterfactual scenario analysis. Think of it as a flight recorder + experimental testing lab for your AI agents.
 
 ## 🚀 Quick Start
 
@@ -35,18 +35,18 @@ agent = create_my_agent()
 result = agent.invoke({"messages": [HumanMessage("Hello")]})
 ```
 
-### Step 2: Run "What If" Experiments
+### Step 2: Run Branch Experiments
 
 ```python
 from timemachine.replay import CounterfactualEngine
 
 engine = CounterfactualEngine()
 
-# What if we used different models?
+# Test different models across execution branches
 model_comparison = engine.analyze_model_alternatives("execution_id", 
     ["gpt-3.5-turbo", "gpt-4", "claude-3-sonnet"])
 
-# What if we used different temperatures?
+# Experiment with different temperatures
 temp_analysis = engine.analyze_temperature_sensitivity("execution_id", 
     [0.1, 0.5, 0.9])
 
@@ -62,8 +62,8 @@ print(f"Best scenario: {model_comparison.best_scenario.scenario.name}")
 - **Multiple Integration Methods** - Decorator, context manager, or direct wrapping
 - **Error Handling** - Graceful recording even when nodes fail
 
-### 🎮 Phase 2: "What If" Games (COMPLETE)  
-- **Counterfactual Analysis** - Pure "what if" scenario testing
+### 🎮 Phase 2: Branch Testing (COMPLETE)  
+- **Counterfactual Analysis** - Pure scenario testing across execution branches
 - **Model Alternatives** - Compare different AI models (GPT-4 vs GPT-3.5 vs Claude)
 - **Temperature Sensitivity** - Test how creativity settings affect outputs
 - **Prompt Variations** - Experiment with different prompt formulations
@@ -91,7 +91,7 @@ Before building UI, we need:
 - **Cleanup Tools**: Archive old recordings, manage database size
 - **Performance Metrics**: Track replay success rates, execution times, memory usage
 
-## 🎮 "What If" Examples
+## 🎮 Branch Testing Examples
 
 ### Model Comparison
 ```python
@@ -165,7 +165,7 @@ for scenario in max_tokens_sweep.scenarios:
 
 ### For Developers
 - **Debug Complex Flows** - See exactly what happened in each node
-- **Test "What If" Scenarios** - Safely experiment with different parameters
+- **Test Branch Scenarios** - Safely experiment with different parameters
 - **Compare Approaches** - Evaluate model alternatives without rebuilding
 - **Understand Sensitivity** - See how small changes affect outputs
 
@@ -180,7 +180,7 @@ for scenario in max_tokens_sweep.scenarios:
 TimeMachine operates in two simplified phases:
 
 1. **Recording Phase** - Captures all node executions with full state
-2. **"What If" Phase** - Enables counterfactual scenario analysis
+2. **Branch Testing Phase** - Enables counterfactual scenario analysis
 
 ### Current Structure (Phase 3)
 ```
@@ -192,7 +192,7 @@ time-machine/
 │   │   ├── wrapper.py        # Node instrumentation  
 │   │   ├── serializer.py     # State serialization
 │   │   └── decorator.py      # Integration helpers
-│   └── replay/               # Phase 2: "What if" games
+│   └── replay/               # Phase 2: Branch testing
 │       ├── engine.py         # Replay orchestration
 │       └── counterfactual.py # Counterfactual scenarios
 ├── web/                      # Phase 3: Web UI
@@ -263,7 +263,7 @@ agent = tm_graph.compile()
 - [x] Error handling
 - [x] Comprehensive testing
 
-### ✅ Phase 2: Simplified "What If" Games (COMPLETE)
+### ✅ Phase 2: Simplified Branch Testing (COMPLETE)
 - [x] Counterfactual analysis engine
 - [x] Model alternatives comparison
 - [x] Temperature sensitivity testing
@@ -273,11 +273,14 @@ agent = tm_graph.compile()
 
 ### ✅ Phase 3: Web UI (COMPLETE)
 - [x] Next.js web application with TypeScript
+- [x] Modern dark theme with glass morphism design
 - [x] Graph runs browser and execution timeline
 - [x] Interactive counterfactual analysis interface
 - [x] Real-time results visualization with charts
 - [x] FastAPI backend integration
 - [x] Responsive design with Tailwind CSS
+- [x] Framer Motion animations and micro-interactions
+- [x] Professional enterprise-grade UI/UX
 
 ## 📝 Sample Agent
 
@@ -297,11 +300,13 @@ python test/test_demo_sample_agent.py
 TimeMachine includes a modern web interface built with Next.js and TypeScript:
 
 ### Features
-- **Graph Runs Browser** - View all recorded agent executions in a clean interface
+- **Modern Dark Theme** - Professional dark interface with glass morphism effects and smooth animations
+- **Graph Runs Browser** - View all recorded agent executions with elegant card-based design
 - **Execution Timeline** - Drill down into individual node executions with detailed state inspection
-- **Interactive Counterfactuals** - Run "what if" experiments with intuitive parameter controls
+- **Interactive Branch Testing** - Run counterfactual experiments with intuitive parameter controls
 - **Real-time Visualization** - Charts and graphs showing output differences and success rates
-- **Responsive Design** - Works seamlessly on desktop and mobile devices
+- **Responsive Design** - Works seamlessly on desktop and mobile devices with fluid transitions
+- **Framer Motion Animations** - Smooth micro-interactions and page transitions for enhanced UX
 
 ### Quick Start
 ```bash
@@ -319,7 +324,7 @@ python backend.py
 ### Usage Flow
 1. **Record Executions** → Use Python decorators to capture agent runs
 2. **Browse Data** → View runs and executions in the web interface  
-3. **Select & Experiment** → Pick any execution and run counterfactual tests
+3. **Select & Experiment** → Pick any execution and run branch experiments
 4. **Analyze Results** → Visualize differences and insights with interactive charts
 
 ## 🛠️ Development

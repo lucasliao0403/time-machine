@@ -103,14 +103,14 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
       case 'temperature':
         return (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-200 mb-2">
               Temperature Values (comma-separated)
             </label>
             <input
               type="text"
               value={temperatureValues}
               onChange={(e) => setTemperatureValues(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-3 py-2 bg-gray-900 border border-gray-300/20 rounded-md text-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-slate-700 focus:border-slate-600"
               placeholder="0.1, 0.5, 0.9"
             />
             <p className="mt-1 text-xs text-gray-500">
@@ -122,14 +122,14 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
       case 'model':
         return (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-200 mb-2">
               Model Names (comma-separated)
             </label>
             <input
               type="text"
               value={modelNames}
               onChange={(e) => setModelNames(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-3 py-2 bg-slate-900 border border-gray-300/20 rounded-md text-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-slate-700 focus:border-slate-600"
               placeholder="gpt-3.5-turbo, gpt-4o-mini"
             />
             <p className="mt-1 text-xs text-gray-500">
@@ -141,14 +141,14 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
       case 'custom':
         return (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-200 mb-2">
               Custom Modifications (JSON)
             </label>
             <textarea
               value={customModifications}
               onChange={(e) => setCustomModifications(e.target.value)}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-mono text-sm"
+              className="w-full px-3 py-2 bg-slate-900 border border-gray-300/20 rounded-md text-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-slate-700 focus:border-slate-600 font-mono text-sm"
               placeholder='{"temperature": 0.8, "max_tokens": 100}'
             />
             <p className="mt-1 text-xs text-gray-500">
@@ -162,8 +162,8 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-2">What If Analysis</h2>
-        <p className="text-sm text-gray-600">
+        <h2 className="text-lg font-semibold text-gray-100 mb-2">What If Analysis</h2>
+        <p className="text-sm text-gray-300">
           Selected execution: <span className="font-medium">{execution.node_name}</span> • 
           Run counterfactual experiments to see how different parameters affect the output
         </p>
@@ -180,20 +180,20 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
               key={analysis.type}
               onClick={() => setSelectedAnalysis(analysis.type)}
               className={`
-                p-4 border-2 rounded-lg text-left transition-all
+                apple-glass-card p-4 text-left transition-all
                 ${isSelected 
-                  ? 'border-primary-500 bg-primary-50' 
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  ? 'ring-2 ring-gray-300/30' 
+                  : 'hover:ring-1 hover:ring-gray-300/20'
                 }
               `}
             >
               <div className="flex items-center space-x-3 mb-2">
-                <Icon className={`h-5 w-5 ${isSelected ? 'text-primary-600' : 'text-gray-400'}`} />
-                <h3 className={`font-medium ${isSelected ? 'text-primary-900' : 'text-gray-900'}`}>
+                <Icon className={`h-5 w-5 ${isSelected ? 'text-gray-200' : 'text-gray-400'}`} />
+                <h3 className={`font-medium ${isSelected ? 'text-gray-100' : 'text-gray-100'}`}>
                   {analysis.label}
                 </h3>
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-300">
                 {analysis.description}
               </p>
             </button>
@@ -202,15 +202,15 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
       </div>
 
       {/* Configuration Section */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">
+      <div className="apple-glass-card p-6">
+        <h3 className="text-lg font-medium text-gray-100 mb-4">
           Configure {analysisTypes.find(a => a.type === selectedAnalysis)?.label}
         </h3>
         
         {renderConfigSection()}
 
         {error && (
-          <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="mt-4  border border-red-200 rounded-lg p-4">
             <p className="text-sm text-red-800">{error}</p>
           </div>
         )}
@@ -232,23 +232,23 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
       </div>
 
       {/* Execution Details */}
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-        <h4 className="font-medium text-gray-900 mb-2">Execution Details</h4>
+      <div className="apple-glass-card p-4">
+        <h4 className="font-medium text-gray-100 mb-2">Execution Details</h4>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <span className="text-gray-600">Node:</span>
+            <span className="text-gray-300">Node:</span>
             <span className="ml-2 font-medium">{execution.node_name}</span>
           </div>
           <div>
-            <span className="text-gray-600">Status:</span>
+            <span className="text-gray-300">Status:</span>
             <span className="ml-2 font-medium capitalize">{execution.status}</span>
           </div>
           <div>
-            <span className="text-gray-600">Duration:</span>
+            <span className="text-gray-300">Duration:</span>
             <span className="ml-2 font-medium">{Math.round(execution.duration_ms)}ms</span>
           </div>
           <div>
-            <span className="text-gray-600">Timestamp:</span>
+            <span className="text-gray-300">Timestamp:</span>
             <span className="ml-2 font-medium">
               {new Date(execution.timestamp * 1000).toLocaleString()}
             </span>

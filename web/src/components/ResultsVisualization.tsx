@@ -14,9 +14,7 @@ const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({ results }) 
   const scenarioData = results.scenarios.map((scenario, index) => {
     // Handle different scenario name formats
     let scenarioName = 'Unknown';
-    if (scenario.scenario_name) {
-      scenarioName = scenario.scenario_name;
-    } else if (scenario.scenario?.name) {
+    if (scenario.scenario?.name) {
       scenarioName = scenario.scenario.name;
     } else if (scenario.scenario?.modifications) {
       // Generate name from modifications
@@ -30,15 +28,15 @@ const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({ results }) 
 
     return {
       name: scenarioName,
-      difference_score: scenario.replay_result?.difference_score || scenario.difference_score || 0,
-      success: scenario.replay_result?.success ?? scenario.success ?? false,
+      difference_score: scenario.replay_result?.difference_score || 0,
+      success: scenario.replay_result?.success ?? false,
       color: COLORS[index % COLORS.length]
     };
   });
 
   const successData = [
-    { name: 'Successful', value: results.scenarios.filter(s => s.replay_result?.success || s.success).length },
-    { name: 'Failed', value: results.scenarios.filter(s => !(s.replay_result?.success || s.success)).length }
+    { name: 'Successful', value: results.scenarios.filter(s => s.replay_result?.success).length },
+    { name: 'Failed', value: results.scenarios.filter(s => !s.replay_result?.success).length }
   ];
 
   const truncateText = (text: string, maxLength: number = 100): string => {
@@ -66,49 +64,49 @@ const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({ results }) 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-2">Analysis Results</h2>
-        <p className="text-sm text-gray-600">
+        <h2 className="text-lg font-semibold text-gray-100 mb-2">Analysis Results</h2>
+        <p className="text-sm text-gray-300">
           Counterfactual analysis completed • {results.scenarios.length} scenarios tested
         </p>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <div className="apple-glass-card border border-gray-300/10 rounded-lg p-4">
           <div className="flex items-center">
             <Target className="h-5 w-5 text-blue-500" />
-            <h3 className="ml-2 text-sm font-medium text-gray-900">Total Scenarios</h3>
+            <h3 className="ml-2 text-sm font-medium text-gray-100">Total Scenarios</h3>
           </div>
-          <p className="mt-2 text-2xl font-bold text-gray-900">{results.scenarios.length}</p>
+          <p className="mt-2 text-2xl font-bold text-gray-100">{results.scenarios.length}</p>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <div className="apple-glass-card border border-gray-300/10 rounded-lg p-4">
           <div className="flex items-center">
             <CheckCircle className="h-5 w-5 text-green-500" />
-            <h3 className="ml-2 text-sm font-medium text-gray-900">Successful</h3>
+            <h3 className="ml-2 text-sm font-medium text-gray-100">Successful</h3>
           </div>
           <p className="mt-2 text-2xl font-bold text-green-600">
-            {results.scenarios.filter(s => s.replay_result?.success || s.success).length}
+            {results.scenarios.filter(s => s.replay_result?.success).length}
           </p>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <div className="apple-glass-card border border-gray-300/10 rounded-lg p-4">
           <div className="flex items-center">
             <AlertCircle className="h-5 w-5 text-red-500" />
-            <h3 className="ml-2 text-sm font-medium text-gray-900">Failed</h3>
+            <h3 className="ml-2 text-sm font-medium text-gray-100">Failed</h3>
           </div>
           <p className="mt-2 text-2xl font-bold text-red-600">
-            {results.scenarios.filter(s => !(s.replay_result?.success || s.success)).length}
+            {results.scenarios.filter(s => !s.replay_result?.success).length}
           </p>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <div className="apple-glass-card border border-gray-300/10 rounded-lg p-4">
           <div className="flex items-center">
             <TrendingUp className="h-5 w-5 text-purple-500" />
-            <h3 className="ml-2 text-sm font-medium text-gray-900">Avg. Difference</h3>
+            <h3 className="ml-2 text-sm font-medium text-gray-100">Avg. Difference</h3>
           </div>
           <p className="mt-2 text-2xl font-bold text-purple-600">
-            {(results.scenarios.reduce((sum, s) => sum + (s.replay_result?.difference_score || s.difference_score || 0), 0) / results.scenarios.length).toFixed(2)}
+            {(results.scenarios.reduce((sum, s) => sum + (s.replay_result?.difference_score || 0), 0) / results.scenarios.length).toFixed(2)}
           </p>
         </div>
       </div>
@@ -116,8 +114,8 @@ const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({ results }) 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Difference Scores Chart */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Output Difference Scores</h3>
+        <div className="apple-glass-card border border-gray-300/10 rounded-lg p-6">
+          <h3 className="text-lg font-medium text-gray-100 mb-4">Output Difference Scores</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={scenarioData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -143,8 +141,8 @@ const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({ results }) 
         </div>
 
         {/* Success Rate Pie Chart */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Success Rate</h3>
+        <div className="apple-glass-card border border-gray-300/10 rounded-lg p-6">
+          <h3 className="text-lg font-medium text-gray-100 mb-4">Success Rate</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -172,13 +170,11 @@ const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({ results }) 
 
       {/* Best Scenario */}
       {results.best_scenario && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+        <div className=" border border-green-200 rounded-lg p-6">
           <h3 className="text-lg font-medium text-green-900 mb-2">Best Scenario</h3>
           <p className="text-green-800">
             <span className="font-medium">
-              {results.best_scenario.scenario?.name || 
-               results.best_scenario.scenario_name || 
-               'Best performing scenario'}
+              {results.best_scenario.scenario?.name || 'Best performing scenario'}
             </span>
           </p>
           {results.best_scenario.scenario?.modifications && (
@@ -190,15 +186,13 @@ const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({ results }) 
       )}
 
       {/* Detailed Results */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Detailed Results</h3>
+      <div className="apple-glass-card border border-gray-300/10 rounded-lg p-6">
+        <h3 className="text-lg font-medium text-gray-100 mb-4">Detailed Results</h3>
         <div className="space-y-4">
           {results.scenarios.map((scenario, index) => {
             // Get scenario name using same logic as scenarioData
             let scenarioName = 'Unknown';
-            if (scenario.scenario_name) {
-              scenarioName = scenario.scenario_name;
-            } else if (scenario.scenario?.name) {
+            if (scenario.scenario?.name) {
               scenarioName = scenario.scenario.name;
             } else if (scenario.scenario?.modifications) {
               const mods = scenario.scenario.modifications;
@@ -213,16 +207,16 @@ const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({ results }) 
             const isSuccess = replayResult.success;
 
             return (
-              <div key={index} className="border border-gray-200 rounded-lg p-4">
+              <div key={index} className="border border-gray-300/10 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium text-gray-900">{scenarioName}</h4>
+                  <h4 className="font-medium text-gray-100">{scenarioName}</h4>
                   <div className="flex items-center space-x-2">
                     {isSuccess ? (
                       <CheckCircle className="h-4 w-4 text-green-500" />
                     ) : (
                       <AlertCircle className="h-4 w-4 text-red-500" />
                     )}
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-gray-300">
                       Difference: {(replayResult.difference_score || 0).toFixed(3)}
                     </span>
                   </div>
@@ -231,20 +225,20 @@ const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({ results }) 
                 {isSuccess ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <h5 className="text-sm font-medium text-gray-700 mb-2">Original Output</h5>
-                      <div className="bg-gray-50 p-3 rounded text-xs text-gray-600 font-mono overflow-x-auto">
+                      <h5 className="text-sm font-medium text-gray-200 mb-2">Original Output</h5>
+                      <div className=" p-3 rounded text-xs text-gray-300 font-mono overflow-x-auto">
                         {formatOutput(replayResult.original_output)}
                       </div>
                     </div>
                     <div>
-                      <h5 className="text-sm font-medium text-gray-700 mb-2">Replayed Output</h5>
-                      <div className="bg-blue-50 p-3 rounded text-xs text-gray-600 font-mono overflow-x-auto">
+                      <h5 className="text-sm font-medium text-gray-200 mb-2">Replayed Output</h5>
+                      <div className=" p-3 rounded text-xs text-gray-300 font-mono overflow-x-auto">
                         {formatOutput(replayResult.replayed_output)}
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-red-50 p-3 rounded">
+                  <div className=" p-3 rounded">
                     <p className="text-sm text-red-800">
                       Error: {replayResult.error || 'Unknown error'}
                     </p>
@@ -259,7 +253,7 @@ const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({ results }) 
       {/* Insights and Recommendations */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {results.insights && results.insights.length > 0 && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <div className=" border border-blue-200 rounded-lg p-6">
             <h3 className="text-lg font-medium text-blue-900 mb-3">Insights</h3>
             <ul className="space-y-2">
               {results.insights.map((insight, index) => (
@@ -272,7 +266,7 @@ const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({ results }) 
         )}
 
         {results.recommendations && results.recommendations.length > 0 && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+          <div className=" border border-yellow-200 rounded-lg p-6">
             <h3 className="text-lg font-medium text-yellow-900 mb-3">Recommendations</h3>
             <ul className="space-y-2">
               {results.recommendations.map((recommendation, index) => (
