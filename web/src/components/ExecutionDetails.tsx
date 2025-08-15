@@ -75,14 +75,14 @@ const ExecutionDetails: React.FC<ExecutionDetailsProps> = ({
 
   if (error) {
     return (
-      <div className=" border border-red-200 rounded-lg p-4">
+      <div className="apple-glass-card border border-gray-300/20 rounded-lg p-4">
         <div className="flex items-center">
-          <AlertCircle className="h-5 w-5 text-red-400" />
-          <span className="ml-2 text-red-800">{error}</span>
+          <AlertCircle className="h-5 w-5 text-gray-400" />
+          <span className="ml-2 text-gray-100">{error}</span>
         </div>
         <button
           onClick={loadExecutions}
-          className="mt-2 text-sm text-red-600 hover:text-red-800 transition-colors"
+          className="mt-2 apple-glass-card text-sm text-gray-200 border border-gray-300/20 hover:bg-gray-300/10 transition-all px-3 py-1 rounded-xl"
         >
           Try again
         </button>
@@ -101,7 +101,7 @@ const ExecutionDetails: React.FC<ExecutionDetailsProps> = ({
         </div>
         <button
           onClick={loadExecutions}
-          className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-200 apple-glass-card hover: transition-colors"
+          className="inline-flex items-center px-3 py-2 apple-glass-card text-sm font-medium text-gray-200 transition-all border border-gray-300/20 hover:bg-gray-300/10 rounded-2xl"
         >
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh

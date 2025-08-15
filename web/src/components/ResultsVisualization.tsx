@@ -170,15 +170,15 @@ const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({ results }) 
 
       {/* Best Scenario */}
       {results.best_scenario && (
-        <div className=" border border-green-200 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-green-900 mb-2">Best Scenario</h3>
-          <p className="text-green-800">
+        <div className="apple-glass-card border border-gray-300/20 rounded-lg p-6">
+          <h3 className="text-lg font-medium text-gray-100 mb-2">Best Scenario</h3>
+          <p className="text-gray-200">
             <span className="font-medium">
               {results.best_scenario.scenario?.name || 'Best performing scenario'}
             </span>
           </p>
           {results.best_scenario.scenario?.modifications && (
-            <div className="mt-2 text-sm text-green-700">
+            <div className="mt-2 text-sm text-gray-300">
               Modifications: {JSON.stringify(results.best_scenario.scenario.modifications, null, 2)}
             </div>
           )}
@@ -238,8 +238,8 @@ const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({ results }) 
                     </div>
                   </div>
                 ) : (
-                  <div className=" p-3 rounded">
-                    <p className="text-sm text-red-800">
+                  <div className="apple-glass-card p-3 rounded border border-gray-300/20">
+                    <p className="text-sm text-gray-200">
                       Error: {replayResult.error || 'Unknown error'}
                     </p>
                   </div>
@@ -253,11 +253,11 @@ const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({ results }) 
       {/* Insights and Recommendations */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {results.insights && results.insights.length > 0 && (
-          <div className=" border border-blue-200 rounded-lg p-6">
-            <h3 className="text-lg font-medium text-blue-900 mb-3">Insights</h3>
+          <div className="apple-glass-card border border-gray-300/20 rounded-lg p-6">
+            <h3 className="text-lg font-medium text-gray-100 mb-3">Insights</h3>
             <ul className="space-y-2">
               {results.insights.map((insight, index) => (
-                <li key={index} className="text-sm text-blue-800">
+                <li key={index} className="text-sm text-gray-300">
                   • {insight}
                 </li>
               ))}
@@ -266,11 +266,11 @@ const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({ results }) 
         )}
 
         {results.recommendations && results.recommendations.length > 0 && (
-          <div className=" border border-yellow-200 rounded-lg p-6">
-            <h3 className="text-lg font-medium text-yellow-900 mb-3">Recommendations</h3>
+          <div className="apple-glass-card border border-gray-300/20 rounded-lg p-6">
+            <h3 className="text-lg font-medium text-gray-100 mb-3">Recommendations</h3>
             <ul className="space-y-2">
               {results.recommendations.map((recommendation, index) => (
-                <li key={index} className="text-sm text-yellow-800">
+                <li key={index} className="text-sm text-gray-300">
                   • {recommendation}
                 </li>
               ))}

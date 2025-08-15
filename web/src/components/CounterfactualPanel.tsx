@@ -110,10 +110,10 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
               type="text"
               value={temperatureValues}
               onChange={(e) => setTemperatureValues(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-900 border border-gray-300/20 rounded-md text-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-slate-700 focus:border-slate-600"
+              className="w-full px-3 py-2 apple-glass-card border border-gray-300/20 rounded-md text-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-300/30 focus:border-gray-300/40"
               placeholder="0.1, 0.5, 0.9"
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-400">
               Values between 0.0 (deterministic) and 1.0 (creative)
             </p>
           </div>
@@ -129,10 +129,10 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
               type="text"
               value={modelNames}
               onChange={(e) => setModelNames(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-900 border border-gray-300/20 rounded-md text-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-slate-700 focus:border-slate-600"
+              className="w-full px-3 py-2 apple-glass-card border border-gray-300/20 rounded-md text-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-300/30 focus:border-gray-300/40"
               placeholder="gpt-3.5-turbo, gpt-4o-mini"
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-400">
               OpenAI model names (e.g., gpt-3.5-turbo, gpt-4, gpt-4o-mini)
             </p>
           </div>
@@ -148,10 +148,10 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
               value={customModifications}
               onChange={(e) => setCustomModifications(e.target.value)}
               rows={4}
-              className="w-full px-3 py-2 bg-slate-900 border border-gray-300/20 rounded-md text-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-slate-700 focus:border-slate-600 font-mono text-sm"
+              className="w-full px-3 py-2 apple-glass-card border border-gray-300/20 rounded-md text-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-300/30 focus:border-gray-300/40 font-mono text-sm"
               placeholder='{"temperature": 0.8, "max_tokens": 100}'
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-400">
               JSON object with parameter modifications
             </p>
           </div>
@@ -210,8 +210,8 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
         {renderConfigSection()}
 
         {error && (
-          <div className="mt-4  border border-red-200 rounded-lg p-4">
-            <p className="text-sm text-red-800">{error}</p>
+          <div className="mt-4 apple-glass-card border border-gray-300/20 rounded-lg p-4">
+            <p className="text-sm text-gray-200">{error}</p>
           </div>
         )}
 
@@ -219,7 +219,7 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
           <button
             onClick={runAnalysis}
             disabled={loading}
-            className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="inline-flex items-center px-4 py-2 apple-glass-card text-gray-200 rounded-2xl transition-all border border-gray-300/20 hover:bg-gray-300/10 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />

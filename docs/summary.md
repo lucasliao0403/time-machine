@@ -1,7 +1,5 @@
 # TimeMachine Implementation Summary
 
-
-
 ## What's Built
 
 **Recording System**: Captures every node execution in LangGraph agents. Records input state, output state, timing, and errors. Works automatically without changing your agent code.
