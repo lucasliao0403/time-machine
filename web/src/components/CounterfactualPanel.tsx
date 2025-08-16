@@ -39,7 +39,7 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
     },
     {
       type: 'model',
-      label: 'Model Comparison',
+      label: 'Change Models',
       icon: Cpu,
       description: 'Compare outputs across different AI models'
     },
@@ -183,7 +183,7 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
                 apple-glass-card p-4 text-left transition-all
                 ${isSelected 
                   ? 'ring-2 ring-gray-300/30' 
-                  : 'hover:ring-1 hover:ring-gray-300/20'
+                  : 'hover:bg-gray-300/10 hover:ring-1 hover:ring-gray-300/20'
                 }
               `}
             >
@@ -232,9 +232,11 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
       </div>
 
       {/* Execution Details */}
-      <div className="apple-glass-card p-4">
-        <h4 className="font-medium text-gray-100 mb-2">Execution Details</h4>
-        <div className="grid grid-cols-2 gap-4 text-sm">
+      <div className="apple-glass-card p-6">
+        <h4 className="font-medium text-gray-100 mb-4">Execution Details</h4>
+        
+        {/* Basic Metadata */}
+        <div className="grid grid-cols-2 gap-4 text-sm mb-6">
           <div>
             <span className="text-gray-300">Node:</span>
             <span className="ml-2 font-medium">{execution.node_name}</span>
@@ -254,6 +256,31 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
             </span>
           </div>
         </div>
+
+        {/* State Information */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <h5 className="font-medium text-gray-100 mb-3">Input State</h5>
+            <pre className="apple-glass-card p-3 rounded-lg overflow-x-auto text-gray-300 text-xs max-h-64 overflow-y-auto">
+              {JSON.stringify(execution.input_state, null, 2)}
+            </pre>
+          </div>
+          <div>
+            <h5 className="font-medium text-gray-100 mb-3">Output State</h5>
+            <pre className="apple-glass-card p-3 rounded-lg overflow-x-auto text-gray-300 text-xs max-h-64 overflow-y-auto">
+              {JSON.stringify(execution.output_state, null, 2)}
+            </pre>
+          </div>
+        </div>
+
+        {execution.error_message && (
+          <div className="mt-4">
+            <h5 className="font-medium text-gray-100 mb-2">Error Details</h5>
+            <div className="apple-glass-card p-3 rounded-lg border border-red-500/20">
+              <p className="text-sm text-red-400">{execution.error_message}</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

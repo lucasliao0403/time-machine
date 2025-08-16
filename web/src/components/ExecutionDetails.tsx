@@ -17,7 +17,7 @@ const ExecutionDetails: React.FC<ExecutionDetailsProps> = ({
   const [executions, setExecutions] = useState<NodeExecution[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [hoveredExecution, setHoveredExecution] = useState<NodeExecution | null>(null);
+
 
   useEffect(() => {
     loadExecutions();
@@ -113,12 +113,9 @@ const ExecutionDetails: React.FC<ExecutionDetailsProps> = ({
           <div key={execution.id}>
             <button
               onClick={() => onExecutionSelect(execution)}
-              onMouseEnter={() => setHoveredExecution(execution)}
-              onMouseLeave={() => setHoveredExecution(null)}
               className={`
                 w-full text-left apple-glass-card px-6 py-4 focus:outline-none transition-colors
                 ${selectedExecution?.id === execution.id ? 'ring-2 ring-gray-300/30' : ''}
-                ${hoveredExecution?.id === execution.id ? 'ring-1 ring-gray-300/20' : ''}
               `}
               >
                 <div className="flex items-center justify-between">
@@ -155,22 +152,7 @@ const ExecutionDetails: React.FC<ExecutionDetailsProps> = ({
                   </div>
                 )}
 
-                {(selectedExecution?.id === execution.id || hoveredExecution?.id === execution.id) && (
-                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                    <div>
-                      <h4 className="font-medium text-gray-100 mb-2">Input State</h4>
-                      <pre className="apple-glass-card p-2 rounded overflow-x-auto text-gray-300">
-                        {truncateJson(execution.input_state, 200)}
-                      </pre>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-100 mb-2">Output State</h4>
-                      <pre className="apple-glass-card p-2 rounded overflow-x-auto text-gray-300">
-                        {truncateJson(execution.output_state, 200)}
-                      </pre>
-                    </div>
-                  </div>
-                )}
+
             </button>
           </div>
         ))}

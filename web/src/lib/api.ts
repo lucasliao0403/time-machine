@@ -7,6 +7,7 @@ import {
   CounterfactualRequest,
   CounterfactualResult
 } from '@/types';
+import { GraphLayout } from '@/types/visualization';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -75,6 +76,72 @@ class TimeMachineAPI {
   async getStats(): Promise<Stats> {
     const response = await this.client.get<Stats>('/api/stats');
     return response.data;
+  }
+
+  async getFlowVisualization(graphRunId: string): Promise<GraphLayout> {
+    console.log('[API] Starting getFlowVisualization request', { 
+      graphRunId, 
+      url: `/api/flow-visualization/${graphRunId}`,
+      baseURL: this.client.defaults.baseURL 
+    });
+    
+    try {
+      const response = await this.client.get<GraphLayout>(`/api/flow-visualization/${graphRunId}`);
+      console.log('[API] getFlowVisualization success', { 
+        graphRunId, 
+        status: response.status,
+        dataKeys: Object.keys(response.data),
+        nodeCount: response.data.nodes?.length || 0,
+        edgeCount: response.data.edges?.length || 0
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('[API] getFlowVisualization failed', {
+        graphRunId,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        url: error.config?.url,
+        baseURL: error.config?.baseURL,
+        method: error.config?.method,
+        headers: error.config?.headers,
+        responseData: error.response?.data,
+        message: error.message,
+        stack: error.stack
+      });
+      throw error;
+    }
+  }
+
+  async getAggregateFlowVisualization(): Promise<GraphLayout> {
+    console.log('[API] Starting getAggregateFlowVisualization request', { 
+      url: '/api/aggregate-flow-visualization',
+      baseURL: this.client.defaults.baseURL 
+    });
+    
+    try {
+      const response = await this.client.get<GraphLayout>('/api/aggregate-flow-visualization');
+      console.log('[API] getAggregateFlowVisualization success', { 
+        status: response.status,
+        dataKeys: Object.keys(response.data),
+        nodeCount: response.data.nodes?.length || 0,
+        edgeCount: response.data.edges?.length || 0,
+        totalRuns: response.data.statistics?.totalRuns || 0
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('[API] getAggregateFlowVisualization failed', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        url: error.config?.url,
+        baseURL: error.config?.baseURL,
+        method: error.config?.method,
+        headers: error.config?.headers,
+        responseData: error.response?.data,
+        message: error.message,
+        stack: error.stack
+      });
+      throw error;
+    }
   }
 }
 

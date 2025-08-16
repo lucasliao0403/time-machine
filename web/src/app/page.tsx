@@ -2,16 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Play, BarChart3, Settings, Database, Sparkles, ArrowRight } from 'lucide-react';
+import { Clock, Play, BarChart3, Settings, Database, Sparkles, ArrowRight, GitBranch } from 'lucide-react';
 import { GraphRun, NodeExecution, CounterfactualAnalysis, Stats } from '@/types';
 import GraphRunsList from '@/components/GraphRunsList';
 import ExecutionDetails from '@/components/ExecutionDetails';
 import CounterfactualPanel from '@/components/CounterfactualPanel';
 import ResultsVisualization from '@/components/ResultsVisualization';
 import StatsPanel from '@/components/StatsPanel';
+import ExecutionFlowVisualization from '@/components/ExecutionFlowVisualization';
+import AggregateFlowVisualization from '@/components/AggregateFlowVisualization';
 import api from '@/lib/api';
 
-type TabId = 'runs' | 'executions' | 'counterfactuals' | 'results' | 'stats';
+type TabId = 'runs' | 'executions' | 'counterfactuals' | 'results' | 'stats' | 'flow' | 'aggregate-flow';
 
 interface Tab {
   id: TabId;
@@ -38,9 +40,7 @@ const itemVariants = {
     y: 0,
     opacity: 1,
     transition: {
-      type: "spring" as const,
-      stiffness: 100,
-      damping: 12,
+      duration: 0.15,
     },
   },
 };
@@ -105,7 +105,7 @@ export default function HomePage() {
     },
     { 
       id: 'counterfactuals', 
-      label: 'Branch Test', 
+      label: 'Testing', 
       icon: Settings, 
       disabled: !selectedExecution,
       description: 'Run "what if" scenarios'
@@ -116,6 +116,19 @@ export default function HomePage() {
       icon: BarChart3, 
       disabled: !counterfactualResults,
       description: 'Compare and visualize outcomes'
+    },
+    { 
+      id: 'flow', 
+      label: 'Flow Graph', 
+      icon: GitBranch,
+      disabled: !selectedRun,
+      description: 'Visualize execution flow and branching'
+    },
+    { 
+      id: 'aggregate-flow', 
+      label: 'All Flows', 
+      icon: Sparkles,
+      description: 'Aggregate flow patterns across all runs'
     },
     { 
       id: 'stats', 
@@ -205,18 +218,15 @@ export default function HomePage() {
                   key={tab.id}
                   onClick={() => !isDisabled && setActiveTab(tab.id)}
                   className={`
-                    relative flex items-center space-x-2 px-5 py-3 rounded-2xl font-normal text-sm transition-all duration-300
+                    relative flex items-center space-x-2 px-5 py-3 rounded-2xl font-normal text-sm transition-all
                     ${isActive 
                       ? 'text-gray-100 bg-apple-glass shadow-frosted font-semibold' 
                       : isDisabled 
                         ? 'text-gray-500 cursor-not-allowed'
-                        : 'text-gray-300 hover:text-gray-200  font-medium'
+                        : 'text-gray-300 hover:text-gray-200 hover:bg-gray-300/10 font-medium'
                     }
                   `}
                   disabled={isDisabled}
-                  whileHover={{}}
-                  whileTap={!isDisabled ? { scale: 1} : {}}
-                  transition={{ duration: 0.01 }}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                 >
@@ -287,6 +297,33 @@ export default function HomePage() {
             
             {activeTab === 'results' && counterfactualResults && (
               <ResultsVisualization results={counterfactualResults} />
+            )}
+            
+            {activeTab === 'flow' && selectedRun && (
+              <ExecutionFlowVisualization 
+                graphRunId={selectedRun.graph_run_id}
+                onNodeSelect={(node) => {
+                  // TODO: Enhance with node selection functionality
+                  console.log('Selected node:', node);
+                }}
+                onEdgeSelect={(edge) => {
+                  // TODO: Enhance with edge selection functionality
+                  console.log('Selected edge:', edge);
+                }}
+              />
+            )}
+            
+            {activeTab === 'aggregate-flow' && (
+              <AggregateFlowVisualization 
+                onNodeSelect={(node) => {
+                  // TODO: Could navigate to specific runs with this node
+                  console.log('Selected aggregate node:', node);
+                }}
+                onEdgeSelect={(edge) => {
+                  // TODO: Could filter runs by this edge pattern
+                  console.log('Selected aggregate edge:', edge);
+                }}
+              />
             )}
             
             {activeTab === 'stats' && (

@@ -231,24 +231,13 @@ code {
   animation: shimmer 2s infinite;
 }
 
-/* Hover effects */
-.hover-glass {
-  transition: all 0.3s ease;
+/* Hover effects - following style guide */
+.hover-standard {
+  transition: all 0.15s ease;
 }
 
-.hover-glass:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.08);
-  transform: translateY(-1px);
-}
-
-.hover-minimal {
-  transition: all 0.2s ease;
-}
-
-.hover-minimal:hover {
-  background: rgba(255, 255, 255, 0.04);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+.hover-standard:hover {
+  background: rgba(156, 163, 175, 0.1);
 }
 
 /* Loading states */

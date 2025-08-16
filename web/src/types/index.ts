@@ -5,6 +5,18 @@ export interface GraphRun {
   status: 'completed' | 'running' | 'error';
 }
 
+export interface LLMCall {
+  id: string;
+  execution_id: string;
+  model_name: string;
+  temperature: number;
+  prompt: string;
+  response: string;
+  tokens_used: number;
+  timestamp: number;
+  duration_ms: number;
+}
+
 export interface NodeExecution {
   id: string;
   node_name: string;
@@ -14,6 +26,7 @@ export interface NodeExecution {
   input_state: Record<string, any>;
   output_state: Record<string, any>;
   error_message?: string;
+  llm_calls?: LLMCall[];
 }
 
 export interface CounterfactualRequest {

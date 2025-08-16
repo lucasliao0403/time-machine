@@ -235,11 +235,32 @@ space-y-8    /* Loose spacing - major sections */
 
 ## Interaction States
 
-### Hover States
-- **Background Change Only**: `hover:bg-gray-300/10`
-- **No Scaling**: Elements maintain fixed size
-- **No Movement**: Elements stay in position
-- **Fast Transitions**: 0.15s maximum
+### Standard Hover Animation (REQUIRED)
+**All interactive elements MUST use this exact pattern:**
+
+```tsx
+className="... transition-all hover:bg-gray-300/10"
+```
+
+**Implementation Rules:**
+- **Universal Application**: Apply to buttons, clickable cards, tabs, and any interactive element
+- **Background Change Only**: `hover:bg-gray-300/10` provides subtle glass-like enhancement
+- **Required Transition**: Always include `transition-all` for smooth state changes
+- **No Scaling**: Elements maintain fixed size - no `scale()` transforms
+- **No Movement**: Elements stay in position - no `translateY()` or similar
+- **Fast Transitions**: Maximum 0.15s duration (default `transition-all` is perfect)
+
+### Hover State Examples
+```tsx
+// Buttons
+<button className="... transition-all hover:bg-gray-300/10">
+
+// Cards/Clickable containers  
+<div className="... transition-all hover:bg-gray-300/10">
+
+// Navigation tabs
+<button className="... transition-all hover:bg-gray-300/10">
+```
 
 ### Focus States
 - **Rings**: `focus:ring-2 focus:ring-gray-300/30`
@@ -314,10 +335,17 @@ xl: 1280px   /* Large desktops */
 - ✅ Uses `apple-glass-card` for containers
 - ✅ Uses `text-gray-*` color hierarchy
 - ✅ Uses standardized borders (`border-gray-300/20`)
-- ✅ Uses minimal transitions only (`transition-all`)
+- ✅ **Uses standard hover animation (`transition-all hover:bg-gray-300/10`)**
 - ✅ Follows button pattern for interactive elements
 - ✅ Uses `font-medium` minimum for text weight
 - ✅ Implements consistent spacing (`space-y-*`, `gap-*`)
+
+### Hover Animation Implementation Steps
+1. **Identify Interactive Elements**: Find all buttons, clickable cards, tabs, and interactive containers
+2. **Add Required Classes**: Ensure each has `transition-all hover:bg-gray-300/10`
+3. **Remove Prohibited Effects**: Remove any scaling, movement, or complex hover animations
+4. **Test Consistency**: Verify all interactive elements have the same hover behavior
+5. **Validate Performance**: Ensure smooth transitions with no lag or jank
 
 ### Quality Assurance
 1. **Visual Consistency**: All cards look identical

@@ -401,3 +401,293 @@ The TimeMachine UI implements a sophisticated design system with:
 - Glass transparency levels for different UI layers
 
 This architecture provides the foundation for a production-ready TimeMachine system that integrates seamlessly with existing LangGraph agents while providing powerful debugging and analysis capabilities through a modern, professional interface.
+
+## 11. 2D Execution Flow Visualization
+
+### Overview
+TimeMachine includes a comprehensive 2D visualization system for analyzing execution flow patterns and conditional branching in LangGraph agents. The system supports both single-run analysis and aggregate pattern detection across multiple executions.
+
+### Conditional Branching Support
+✅ **CONFIRMED**: TimeMachine fully supports conditional branching visualization
+- Tracks actual execution paths: Node 1 → Node 2 (sometimes) or Node 1 → Node 3 (other times)
+- Preserves conditional edge mappings from original LangGraph structure
+- Records execution sequences with timestamps for flow reconstruction
+- Calculates branching frequencies and path statistics
+
+### Visualization Architecture
+
+#### Data Flow Pipeline
+```
+Raw Executions (SQLite) → Flow Analysis (Python) → Graph Data (JSON) → D3.js Visualization (React)
+```
+
+#### Type System (`/types/visualization.ts`)
+```typescript
+interface FlowNode {
+  id: string;
+  name: string;
+  type: 'start' | 'node' | 'end' | 'conditional';
+  position: { x: number; y: number };
+  executionCount: number;
+  avgDuration: number;
+  successRate: number;
+  lastExecuted?: number;
+}
+
+interface FlowEdge {
+  id: string;
+  source: string;
+  target: string;
+  executionCount: number;
+  frequency: number; // Percentage of times this path was taken
+  avgDuration: number;
+  conditions?: string[];
+  metadata?: {
+    type?: 'always' | 'conditional' | 'error';
+  };
+}
+
+interface GraphLayout {
+  nodes: FlowNode[];
+  edges: FlowEdge[];
+  statistics: FlowStatistics;
+  bounds: { minX: number; maxX: number; minY: number; maxY: number };
+}
+```
+
+#### Backend Flow Analysis (`/backend.py`)
+
+**Single Run Visualization (`/api/flow-visualization/{graph_run_id}`)**:
+```python
+def get_flow_visualization(graph_run_id: str):
+    # Get all executions for this specific run
+    executions = recorder.get_graph_executions(graph_run_id)
+    sorted_executions = sorted(executions, key=lambda x: x['timestamp'])
+    
+    # Build nodes with statistics
+    for execution in sorted_executions:
+        node_stats[node_name]['count'] += 1
+        node_stats[node_name]['durations'].append(execution['duration_ms'])
+        if execution['status'] == 'success':
+            node_stats[node_name]['successes'] += 1
+    
+    # Build edges from execution sequence
+    for i in range(len(sorted_executions) - 1):
+        current = sorted_executions[i]
+        next_exec = sorted_executions[i + 1]
+        edge_key = f"{current['node_name']}->{next_exec['node_name']}"
+        edge_stats[edge_key]['count'] += 1
+```
+
+**Aggregate Visualization (`/api/aggregate-flow-visualization`)**:
+```python
+def get_aggregate_flow_visualization():
+    # Combine data across ALL graph runs
+    for run in graph_runs:
+        executions = recorder.get_graph_executions(run['graph_run_id'])
+        path = [e['node_name'] for e in sorted_executions]
+        all_paths.append(path)
+        
+    # Calculate branching points
+    for source, targets in edge_sources.items():
+        if len(targets) > 1:  # Multiple outgoing edges = branching
+            branching_points.append({
+                'nodeId': source,
+                'branches': targets
+            })
+    
+    # Path variability analysis
+    unique_paths = len(set([tuple(path) for path in all_paths]))
+    path_variability = (unique_paths - 1) / max(1, total_runs)
+```
+
+#### Frontend Visualization (`ExecutionFlowVisualization.tsx`)
+
+**Technology Stack**:
+- **React + TypeScript**: Component architecture and type safety
+- **D3.js v7**: High-performance SVG rendering and interaction
+- **Framer Motion**: Smooth animations and transitions
+- **TimeMachine Design System**: Glass morphism styling
+
+**Core Features**:
+```typescript
+// Interactive D3.js visualization with zoom/pan
+const zoom = d3.zoom<SVGSVGElement, unknown>()
+  .scaleExtent([0.1, 5])
+  .on('zoom', (event) => {
+    g.attr('transform', event.transform);
+  });
+
+// Dynamic visual encoding
+nodes.append('circle')
+  .attr('r', d => Math.max(20, Math.min(50, d.executionCount * 5))) // Size = frequency
+  .attr('fill', d => {
+    if (d.type === 'start') return 'rgba(34, 197, 94, 0.2)';
+    if (d.type === 'conditional') return 'rgba(59, 130, 246, 0.2)';
+    return 'rgba(156, 163, 175, 0.2)';
+  });
+
+// Edge thickness represents frequency
+edges.attr('stroke-width', d => Math.max(1, d.frequency / 20))
+     .attr('stroke', d => `rgba(156, 163, 175, ${Math.max(0.3, d.frequency / 100)})`);
+```
+
+**Visual Encoding System**:
+
+*Node Representations*:
+- **Size**: Proportional to execution frequency (larger = more executions)
+- **Color**: Type-based (green=start, red=end, blue=conditional, gray=regular)
+- **Badges**: Show execution count numbers
+- **Glow**: Hover and selection feedback
+
+*Edge Representations*:
+- **Thickness**: Path frequency (thick = common path, thin = rare path)
+- **Opacity**: Usage intensity (solid = always used, faded = sometimes used)
+- **Labels**: Show percentage frequency ("80%", "20%")
+- **Arrows**: Indicate execution direction
+
+*Interactive Elements*:
+- **Zoom/Pan Controls**: Navigate large graphs
+- **Click Selection**: View detailed node/edge statistics
+- **Hover Effects**: Highlight elements with glow
+- **Reset View**: Auto-center and optimal zoom
+
+#### Integration Points
+
+**Navigation Tabs**:
+- **"Flow Graph"**: Single run visualization (requires selected run)
+- **"All Flows"**: Aggregate pattern analysis (always available)
+
+**UI Integration** (`/app/page.tsx`):
+```typescript
+{activeTab === 'flow' && selectedRun && (
+  <ExecutionFlowVisualization 
+    graphRunId={selectedRun.graph_run_id}
+    onNodeSelect={(node) => console.log('Selected node:', node)}
+    onEdgeSelect={(edge) => console.log('Selected edge:', edge)}
+  />
+)}
+
+{activeTab === 'aggregate-flow' && (
+  <AggregateFlowVisualization 
+    onNodeSelect={(node) => console.log('Selected aggregate node:', node)}
+    onEdgeSelect={(edge) => console.log('Selected aggregate edge:', edge)}
+  />
+)}
+```
+
+### Statistical Analysis
+
+**Flow Statistics Computed**:
+```typescript
+interface FlowStatistics {
+  totalRuns: number;
+  mostCommonPath: string[];           // Most frequently executed sequence
+  branchingPoints: Array<{            // Nodes with multiple output paths
+    nodeId: string;
+    branches: Array<{
+      targetNode: string;
+      frequency: number;              // % of time this branch is taken
+    }>;
+  }>;
+  deadEnds: string[];                 // Nodes that don't lead anywhere
+  averagePathLength: number;          // Mean number of nodes per execution
+  pathVariability: number;            // 0-1 score of execution diversity
+}
+```
+
+**Branching Analysis Example**:
+```
+Node "router" has 3 branches:
+├─ "process_text" (60% frequency)    ← Most common path
+├─ "process_image" (30% frequency)   ← Secondary path  
+└─ "error_handler" (10% frequency)   ← Error path
+```
+
+### Conditional Branching Visualization
+
+**How Branching is Detected and Visualized**:
+
+1. **Execution Tracking**: Each node execution is timestamped
+2. **Sequence Analysis**: Backend reconstructs flow from execution order
+3. **Pattern Detection**: Multiple paths from same node = conditional branching
+4. **Frequency Calculation**: "Node A → Node B" occurs in X% of runs
+5. **Visual Representation**: Edge thickness and labels show frequencies
+
+**Example Conditional Flow**:
+```
+          ┌─────────────┐
+          │    Input    │
+          │   Analyzer  │
+          └──────┬──────┘
+                 │
+        ┌────────▼────────┐
+        │   Conditional   │ ◄─── Branching Point
+        │     Router      │
+        └─────────────────┘
+         │        │        │
+    80%  │   15%  │   5%   │
+         ▼        ▼        ▼
+   ┌─────────┐ ┌──────┐ ┌──────┐
+   │  Main   │ │ Alt  │ │Error │
+   │Process  │ │Path  │ │ Path │
+   └─────────┘ └──────┘ └──────┘
+```
+
+### Performance Optimizations
+
+**Backend Optimizations**:
+- Efficient SQL queries for execution sequence analysis
+- Caching of aggregate statistics for large datasets
+- Optimized JSON serialization for complex graph structures
+
+**Frontend Optimizations**:
+- D3.js for 60fps smooth interactions
+- Virtualization for large graphs (planned)
+- Debounced zoom/pan operations
+- Efficient React re-rendering with useMemo/useCallback
+
+### Future Extensions
+
+**Planned Enhancements**:
+- **Force-directed layout**: Automatic optimal node positioning
+- **Time-based filtering**: Analyze patterns within specific timeframes
+- **Error path highlighting**: Visually emphasize failure patterns
+- **Interactive filtering**: Filter by success rate, duration, node type
+- **Export capabilities**: Save visualizations as SVG/PNG
+- **Animation playback**: Replay execution sequences step-by-step
+- **Comparative analysis**: Side-by-side flow comparison between different configurations
+
+### Installation and Usage
+
+**Dependencies** (`package.json`):
+```json
+{
+  "dependencies": {
+    "d3": "^7.8.5",
+    // ... other deps
+  },
+  "devDependencies": {
+    "@types/d3": "^7.4.3",
+    // ... other dev deps
+  }
+}
+```
+
+**Quick Start**:
+```bash
+cd web
+npm install          # Installs D3.js and TypeScript definitions
+npm run dev          # Start development server
+python backend.py    # Start FastAPI backend (separate terminal)
+```
+
+**Navigation**:
+1. Record agent executions using TimeMachine decorators
+2. Open web interface at http://localhost:3000
+3. Select a graph run → "Flow Graph" tab shows individual execution flow
+4. "All Flows" tab shows aggregate patterns across all runs
+5. Click nodes/edges for detailed statistics and analysis
+6. Use zoom controls for navigation of complex graphs
+
+The 2D visualization system provides comprehensive insights into both individual execution patterns and aggregate behavior across multiple runs, making it easy to understand conditional branching, identify bottlenecks, and optimize agent performance.

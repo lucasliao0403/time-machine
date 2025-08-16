@@ -8,4 +8,6 @@ Always refer to /docs/ when before making changes. Choose one or more files with
 If making visual/stylistic changes, refer to /docs/style.md
 If making architecture decisions, refer to /architecture/style.md
 
+When running terminal commands, don't use the && operator. Run commands seperately.
+
 After making changes, always update these files if relevant: /README.txt, docs\architecture.md, docs\summary.md
