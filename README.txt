@@ -302,9 +302,11 @@ TimeMachine includes a modern web interface built with Next.js and TypeScript:
 ### Features
 - **Modern Dark Theme** - Professional dark interface with glass morphism effects and smooth animations
 - **Graph Runs Browser** - View all recorded agent executions with elegant card-based design
-- **Execution Timeline** - Drill down into individual node executions with detailed state inspection
-- **Interactive Branch Testing** - Run counterfactual experiments with intuitive parameter controls
-- **Real-time Visualization** - Charts and graphs showing output differences and success rates
+- **Unified Flow Interface** - Single interface combining flow visualization, execution details, and testing
+- **Interactive Node Selection** - Click any node to view all executions and run tests immediately
+- **Seamless Testing Workflow** - No tab switching: select node → view executions → test → see results
+- **Multi-Execution Support** - Handle circular flows by showing all executions for each node
+- **Real-time Visualization** - 2D flow graphs with D3.js and interactive counterfactual analysis
 - **Responsive Design** - Works seamlessly on desktop and mobile devices with fluid transitions
 - **Framer Motion Animations** - Smooth micro-interactions and page transitions for enhanced UX
 
@@ -323,9 +325,10 @@ python backend.py
 
 ### Usage Flow
 1. **Record Executions** → Use Python decorators to capture agent runs
-2. **Browse Data** → View runs and executions in the web interface  
-3. **Select & Experiment** → Pick any execution and run branch experiments
-4. **Analyze Results** → Visualize differences and insights with interactive charts
+2. **Browse Runs** → View all recorded graph runs in the web interface
+3. **Explore Flow** → Select a run to view the unified flow visualization  
+4. **Test Nodes** → Click any node to see executions and run counterfactual tests
+5. **Analyze Results** → Compare original vs modified outputs in the same interface
 
 ## 🛠️ Development
 

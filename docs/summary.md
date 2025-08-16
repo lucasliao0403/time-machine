@@ -10,22 +10,31 @@
 **Scenario Comparison**: Ranks different approaches by how much they change outputs. Identifies best and worst performing modifications.
 
 ## How Someone Uses It
+
 **Add decorator, run agent**: Developer adds `@timemachine.record()` to their agent function and runs it normally. All executions get saved automatically.
-**Pick execution, test alternatives**: Point to any recorded execution and test alternative execution branches like "using GPT-4 instead". System replays with different settings and shows the differences.
+**Browse and select**: Open web interface, browse recorded graph runs, and select one to view the unified flow visualization.
+**Interactive testing**: Click any node in the flow graph to see all its executions, select a specific execution, and run counterfactual tests (temperature, model, custom) immediately.
+**Seamless analysis**: View test results in the same interface without switching tabs - everything from flow visualization to testing to results in one cohesive experience.
 
 ## Data Flow
+
 **Recording**: Decorator wraps StateGraph.compile(), instruments each node with wrapper that captures input/output state before/after execution. State gets serialized to JSON and stored in SQLite with execution metadata.
 **Replay**: Engine loads execution from database, deserializes state, applies modifications (model/temperature/prompt changes), re-executes original node function, calculates output difference score, returns comparison results.
 
 ## Modern Web Interface
+
 **Professional UI/UX**: Built modern dark theme web interface with glass morphism design, Framer Motion animations, and enterprise-grade aesthetics.
-**Complete Navigation**: Elegant glass-card based browser for graph runs with status indicators, execution counts, and responsive design.
-**Interactive Dashboard**: Real-time statistics panel with animated counters, database metrics, and usage guidelines.
+**Unified Flow Interface**: Single cohesive interface combining 2D flow visualization, node execution details, and counterfactual testing capabilities.
+**Interactive Node Selection**: Click any node in the flow graph to view all executions for that node and run tests immediately without tab switching.
+**Seamless Testing Workflow**: Streamlined user experience - select run → view flow → click node → see executions → test → analyze results.
+**Multi-Execution Support**: Handles circular flows by displaying all executions per node, allowing users to select specific executions for testing.
+**Real-time Visualization**: D3.js-powered flow graphs with interactive statistics, testing controls, and result comparison in a single interface.
 **Design System**: Comprehensive style guide with consistent color palette, typography, spacing, and component patterns.
 
 ## Next Steps
+
 - Only works with mock data, not real LLM API calls
-- Can't analyze multiple executions at once  
+- Can't analyze multiple executions at once
 - No way to search old recordings by content
 - Can't export data for external analysis
 - No connections to external DBs
