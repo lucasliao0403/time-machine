@@ -35,7 +35,6 @@ class CounterfactualResult:
     scenario: CounterfactualScenario
     replay_result: ReplayResult
     analysis: Dict[str, Any]
-    insights: List[str]
     confidence: float
 
 
@@ -46,7 +45,6 @@ class CounterfactualComparison:
     scenarios: List[CounterfactualResult]
     best_scenario: Optional[CounterfactualResult]
     worst_scenario: Optional[CounterfactualResult]
-    insights: List[str]
     recommendations: List[str]
 
 
@@ -154,14 +152,12 @@ class CounterfactualEngine:
             
             # Analyze the result
             analysis = self._analyze_scenario_result(scenario, replay_result)
-            insights = self._generate_insights(scenario, replay_result, analysis)
             confidence = self._calculate_confidence(scenario, replay_result)
             
             result = CounterfactualResult(
                 scenario=scenario,
                 replay_result=replay_result,
                 analysis=analysis,
-                insights=insights,
                 confidence=confidence
             )
             results.append(result)
@@ -170,8 +166,7 @@ class CounterfactualEngine:
         best_scenario = self._find_best_scenario(results)
         worst_scenario = self._find_worst_scenario(results)
         
-        # Generate overall insights and recommendations
-        overall_insights = self._generate_overall_insights(results)
+        # Generate recommendations
         recommendations = self._generate_recommendations(results)
         
         return CounterfactualComparison(
@@ -179,7 +174,6 @@ class CounterfactualEngine:
             scenarios=results,
             best_scenario=best_scenario,
             worst_scenario=worst_scenario,
-            insights=overall_insights,
             recommendations=recommendations
         )
     
@@ -250,34 +244,7 @@ class CounterfactualEngine:
             return "Prompt change significantly affected output"
         else:
             return "Prompt change had minimal impact"
-    
-    def _generate_insights(self, scenario: CounterfactualScenario,
-                          replay_result: ReplayResult, analysis: Dict[str, Any]) -> List[str]:
-        """Generate insights from scenario analysis"""
-        insights = []
-        
-        if not replay_result.success:
-            insights.append(f"Scenario '{scenario.name}' failed: {replay_result.error}")
-            return insights
-        
-        if analysis['significant_change']:
-            insights.append(f"Scenario '{scenario.name}' produced significantly different output")
-        
-        if replay_result.cost_difference < -0.01:
-            savings = abs(replay_result.cost_difference)
-            insights.append(f"Could save ${savings:.3f} per execution with this change")
-        elif replay_result.cost_difference > 0.01:
-            cost = replay_result.cost_difference
-            insights.append(f"Would cost additional ${cost:.3f} per execution")
-        
-        if scenario.type == CounterfactualType.TEMPERATURE_CHANGE:
-            temp = scenario.modifications.get('temperature', 'unknown')
-            if analysis['temperature_impact'] == "Significant output variation - high temperature impact":
-                insights.append(f"Temperature {temp} creates high variability - use for creative tasks")
-            elif temp <= 0.3:
-                insights.append(f"Temperature {temp} produces consistent outputs - good for factual tasks")
-        
-        return insights
+
     
     def _calculate_confidence(self, scenario: CounterfactualScenario,
                             replay_result: ReplayResult) -> float:
@@ -326,20 +293,7 @@ class CounterfactualEngine:
             return -result.confidence  # Lower confidence = worse
         
         return max(results, key=score_scenario)
-    
-    def _generate_overall_insights(self, results: List[CounterfactualResult]) -> List[str]:
-        """Generate insights across all scenarios - simplified for Phase 2.5"""
-        insights = []
-        
-        successful_count = sum(1 for r in results if r.replay_result.success)
-        insights.append(f"{successful_count}/{len(results)} scenarios executed successfully")
-        
-        high_variance_scenarios = [r for r in results 
-                                 if r.replay_result.success and r.replay_result.output_difference_score > 0.7]
-        if high_variance_scenarios:
-            insights.append(f"{len(high_variance_scenarios)} scenarios showed significant output changes")
-        
-        return insights
+
     
     def _generate_recommendations(self, results: List[CounterfactualResult]) -> List[str]:
         """Generate actionable recommendations - simplified for Phase 2.5"""

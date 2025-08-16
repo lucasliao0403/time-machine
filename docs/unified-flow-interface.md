@@ -249,7 +249,6 @@ interface BatchTest {
 interface TestHistory {
   tests: CounterfactualTest[];
   comparisons: TestComparison[];
-  insights: TestInsight[];
 }
 ```
 
@@ -433,7 +432,7 @@ interface FlowInterfaceContext {
 ### Low Priority (Future)
 
 1. AI-powered test recommendations
-2. Advanced analytics and insights
+2. Advanced analytics and visualizations
 3. Test automation and scheduling
 4. Cross-run comparison and analysis
 

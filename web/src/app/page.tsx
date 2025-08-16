@@ -88,7 +88,7 @@ export default function HomePage() {
       id: "stats",
       label: "Statistics",
       icon: Play,
-      description: "View database metrics and insights",
+      description: "View database metrics and analytics",
     },
   ];
 

@@ -9,11 +9,13 @@ import {
   BarChart3,
   Settings,
   ChevronRight,
+  ChevronDown,
 } from "lucide-react";
 import { FlowNode } from "@/types/visualization";
 import { NodeExecution, CounterfactualAnalysis } from "@/types";
 import CounterfactualPanel from "./CounterfactualPanel";
 import ResultsVisualization from "./ResultsVisualization";
+import JsonModal from "./JsonModal";
 
 interface NodeDetailsPanelProps {
   selectedNode: FlowNode | null;
@@ -44,6 +46,24 @@ const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
   onClearSelection,
 }) => {
   const [activeTab, setActiveTab] = useState<TabId>("info");
+
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState<any>(null);
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalSubtitle, setModalSubtitle] = useState("");
+
+  const openModal = (title: string, content: any, subtitle?: string) => {
+    setModalTitle(title);
+    setModalContent(content);
+    setModalSubtitle(subtitle || "");
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setModalContent(null);
+  };
 
   if (!selectedNode) return null;
 
@@ -277,17 +297,41 @@ const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
                   <h5 className="font-medium text-gray-100 mb-3">
                     Input State
                   </h5>
-                  <pre className="apple-glass-card p-3 rounded-lg overflow-x-auto text-gray-300 text-xs max-h-64 overflow-y-auto">
-                    {JSON.stringify(selectedExecution.input_state, null, 2)}
-                  </pre>
+                  <button
+                    onClick={() =>
+                      openModal(
+                        "Input State",
+                        selectedExecution.input_state,
+                        `${selectedExecution.node_name} - Execution Input`
+                      )
+                    }
+                    className="w-full text-left apple-glass-card p-3 rounded-lg text-gray-300 text-xs hover:bg-gray-300/10 transition-all cursor-pointer border border-gray-300/10 hover:border-gray-300/30 relative group"
+                  >
+                    <pre className="max-h-32 overflow-hidden font-mono pr-8">
+                      {JSON.stringify(selectedExecution.input_state, null, 2)}
+                    </pre>
+                    <ChevronDown className="absolute top-3 right-3 h-4 w-4 text-gray-400 opacity-60 group-hover:opacity-100 transition-opacity" />
+                  </button>
                 </div>
                 <div>
                   <h5 className="font-medium text-gray-100 mb-3">
                     Output State
                   </h5>
-                  <pre className="apple-glass-card p-3 rounded-lg overflow-x-auto text-gray-300 text-xs max-h-64 overflow-y-auto">
-                    {JSON.stringify(selectedExecution.output_state, null, 2)}
-                  </pre>
+                  <button
+                    onClick={() =>
+                      openModal(
+                        "Output State",
+                        selectedExecution.output_state,
+                        `${selectedExecution.node_name} - Execution Output`
+                      )
+                    }
+                    className="w-full text-left apple-glass-card p-3 rounded-lg text-gray-300 text-xs hover:bg-gray-300/10 transition-all cursor-pointer border border-gray-300/10 hover:border-gray-300/30 relative group"
+                  >
+                    <pre className="max-h-32 overflow-hidden font-mono pr-8">
+                      {JSON.stringify(selectedExecution.output_state, null, 2)}
+                    </pre>
+                    <ChevronDown className="absolute top-3 right-3 h-4 w-4 text-gray-400 opacity-60 group-hover:opacity-100 transition-opacity" />
+                  </button>
                 </div>
               </div>
 
@@ -318,6 +362,15 @@ const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
           <ResultsVisualization results={testResults} />
         )}
       </div>
+
+      {/* Modal for viewing full content */}
+      <JsonModal
+        isOpen={modalOpen}
+        onClose={closeModal}
+        title={modalTitle}
+        content={modalContent}
+        subtitle={modalSubtitle}
+      />
     </motion.div>
   );
 };

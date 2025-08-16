@@ -1,9 +1,11 @@
 # TimeMachine Architecture - Node-Level Recording for LangGraph
 
 ## Overview
+
 TimeMachine is a time-travel debugger for LangGraph agents that records every node execution with full context, allowing replay and counterfactual testing.
 
 ## Core Concept
+
 ```
 Original Node: input_state -> node_function() -> output_state
 Wrapped Node:  input_state -> [RECORD] -> node_function() -> [RECORD] -> output_state
@@ -12,13 +14,14 @@ Wrapped Node:  input_state -> [RECORD] -> node_function() -> [RECORD] -> output_
 ## 1. Recording Architecture
 
 ### Node Wrapper Implementation
+
 ```python
 class TimeMachineNodeWrapper:
     def __init__(self, original_node_func, node_name, recorder):
         self.original_func = original_node_func
         self.node_name = node_name
         self.recorder = recorder
-    
+
     def __call__(self, state, config=None):
         # Record input
         execution_id = self.recorder.start_execution(
@@ -26,13 +29,13 @@ class TimeMachineNodeWrapper:
             input_state=state,
             timestamp=time.time()
         )
-        
+
         try:
             # Execute original node
             start_time = time.time()
             result = self.original_func(state, config)
             duration = time.time() - start_time
-            
+
             # Record success
             self.recorder.complete_execution(
                 execution_id=execution_id,
@@ -40,9 +43,9 @@ class TimeMachineNodeWrapper:
                 duration_ms=duration * 1000,
                 status="success"
             )
-            
+
             return result
-            
+
         except Exception as e:
             # Record failure
             self.recorder.complete_execution(
@@ -54,12 +57,13 @@ class TimeMachineNodeWrapper:
 ```
 
 ### Automatic Graph Instrumentation
+
 ```python
 class TimeMachineGraph:
     def __init__(self, original_graph):
         self.original_graph = original_graph
         self.recorder = TimeMachineRecorder()
-        
+
     def instrument_graph(self):
         """Wrap all nodes in the compiled graph"""
         for node_name, node in self.original_graph.nodes.items():
@@ -74,6 +78,7 @@ class TimeMachineGraph:
 ## 2. Database Schema
 
 ### SQLite Tables
+
 ```sql
 -- Main executions table
 CREATE TABLE node_executions (
@@ -82,15 +87,15 @@ CREATE TABLE node_executions (
     node_name TEXT NOT NULL,
     timestamp INTEGER NOT NULL,
     input_state TEXT,       -- JSON serialized state
-    output_state TEXT,      -- JSON serialized state  
+    output_state TEXT,      -- JSON serialized state
     duration_ms INTEGER,
     status TEXT,            -- 'success', 'error', 'interrupted'
     error_message TEXT,
-    
+
     -- Metadata for replay
     graph_structure TEXT,   -- JSON of graph topology
     node_position INTEGER,  -- Order in execution sequence
-    
+
     -- Cost tracking
     total_tokens INTEGER,
     estimated_cost REAL
@@ -122,6 +127,7 @@ CREATE TABLE graph_snapshots (
 ## 3. User Integration
 
 ### Simple Decorator Pattern
+
 ```python
 # Easy integration - user just decorates their graph compilation
 @timemachine.record()
@@ -141,6 +147,7 @@ with timemachine.recording():
 ```
 
 ### Zero Code Changes Required
+
 ```python
 # Original code (unchanged):
 agent = create_my_agent()
@@ -154,6 +161,7 @@ result = agent.invoke({"messages": [], "topic": ""})
 ## 4. State Serialization
 
 ### Handling Complex LangGraph State
+
 ```python
 class StateSerializer:
     def serialize_state(self, state):
@@ -164,7 +172,7 @@ class StateSerializer:
             return self._serialize_object(state)
         else:
             return json.dumps(state, default=str)
-    
+
     def _serialize_dict(self, state_dict):
         """Handle complex state with messages, etc."""
         serialized = {}
@@ -175,7 +183,7 @@ class StateSerializer:
             else:
                 serialized[key] = value
         return json.dumps(serialized)
-    
+
     def _serialize_message(self, message):
         """Serialize LangChain message objects"""
         return {
@@ -188,97 +196,100 @@ class StateSerializer:
 ## 5. Replay Engine
 
 ### Node-Level Replay
+
 ```python
 class NodeReplayEngine:
     def __init__(self, db_path):
         self.db = sqlite3.connect(db_path)
-        
+
     def replay_node_execution(self, execution_id):
         """Replay a single node execution"""
         execution = self.load_execution(execution_id)
-        
+
         # Reconstruct the node function
         node_func = self.reconstruct_node_function(execution)
-        
+
         # Deserialize input state
         input_state = self.deserialize_state(execution['input_state'])
-        
+
         # Execute with same input
         result = node_func(input_state)
-        
+
         return {
             "original_output": self.deserialize_state(execution['output_state']),
             "replay_output": result,
             "match": self.compare_states(execution['output_state'], result)
         }
-    
+
     def replay_graph_run(self, graph_run_id):
         """Replay entire graph execution"""
         executions = self.load_graph_executions(graph_run_id)
-        
+
         # Reconstruct graph
         graph = self.reconstruct_graph(graph_run_id)
-        
+
         # Get initial state from first execution
         initial_state = self.get_initial_state(executions[0])
-        
+
         # Run entire graph
         result = graph.invoke(initial_state)
-        
+
         return result
 ```
 
 ## 6. Counterfactual Testing
 
 ### Testing Alternative Scenarios
+
 ```python
 class CounterfactualEngine:
     def test_node_with_different_params(self, execution_id, **modifications):
         """Test what would happen with modified node behavior"""
         execution = self.load_execution(execution_id)
-        
+
         # Modify the node function based on parameters
         if 'model' in modifications:
             # Replace LLM calls in the node with different model
             modified_node = self.modify_node_llm(execution, modifications['model'])
-        
+
         if 'temperature' in modifications:
             # Adjust temperature in LLM calls
             modified_node = self.modify_node_temperature(execution, modifications['temperature'])
-        
+
         # Execute with same input state
         input_state = self.deserialize_state(execution['input_state'])
         result = modified_node(input_state)
-        
+
         return result
 ```
 
 ## 7. LLM Call Detection
 
 ### Capturing LLM Calls Within Nodes
+
 ```python
 class LLMCallRecorder:
     def __init__(self, execution_id):
         self.execution_id = execution_id
         self.calls = []
-    
+
     def __enter__(self):
         # Patch ChatOpenAI, ChatAnthropic, etc.
         self.original_invoke = ChatOpenAI.invoke
         ChatOpenAI.invoke = self.wrapped_invoke
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         # Restore original methods
         ChatOpenAI.invoke = self.original_invoke
         # Save recorded calls to database
         self.save_llm_calls()
-    
+
     def wrapped_invoke(self, instance, messages, **kwargs):
         start_time = time.time()
         result = self.original_invoke(instance, messages, **kwargs)
         duration = time.time() - start_time
-        
+
         self.calls.append({
             "model": instance.model_name,
             "temperature": getattr(instance, 'temperature', 0.7),
@@ -287,13 +298,14 @@ class LLMCallRecorder:
             "duration_ms": duration * 1000,
             "timestamp": start_time
         })
-        
+
         return result
 ```
 
 ## 8. Sample Agent Recording Example
 
 ### What Gets Recorded
+
 For the sample agent with 2 nodes:
 
 ```python
@@ -305,9 +317,9 @@ For the sample agent with 2 nodes:
     "llm_calls": []  # No LLM calls in this node
 }
 
-# Execution 2: second_step node  
+# Execution 2: second_step node
 {
-    "node_name": "step2", 
+    "node_name": "step2",
     "input_state": {"messages": [HumanMessage("python")], "topic": "python"},
     "output_state": {"messages": [HumanMessage("python"), AIMessage("Python fact...")]},
     "llm_calls": [
@@ -325,32 +337,40 @@ For the sample agent with 2 nodes:
 ## 9. Web UI Integration
 
 ### FastAPI Backend
-- REST endpoints for listing recordings
-- Replay functionality
-- Counterfactual testing interface
-- Real-time execution monitoring
 
-### Simple Frontend
-- List view of graph runs
-- Node execution timeline
-- State diff visualization
-- Replay and branch testing buttons
+- REST endpoints for listing recordings and executions
+- Replay functionality with ReplayEngine integration
+- Counterfactual testing interface (temperature, model, custom)
+- Flow visualization data with D3.js compatibility
+- Fixed API response format matching TypeScript interfaces
+
+### Modern Frontend Architecture
+
+- **Unified Flow Interface**: Single cohesive interface combining flow visualization, execution details, and testing
+- **Interactive Node Selection**: Click any node to view all executions and run tests immediately
+- **Multi-Execution Support**: Handles circular flows by displaying all executions per node
+- **Real-time Testing**: Seamless workflow from node selection to counterfactual analysis
+- **Modal Content Viewing**: JsonModal component for viewing full JSON content with copy functionality
+- **Professional UI**: Glass morphism design system with Framer Motion animations
 
 ## 10. Key Benefits
 
 ### For Developers
+
 - **Minimal intrusion**: Just add a decorator or context manager
 - **Complete context**: Captures full state transitions, not just LLM calls
 - **Flexible replay**: Can replay individual nodes or full graphs
 - **Natural boundaries**: Nodes are logical units developers understand
 
 ### For Debugging
+
 - **Precise failure isolation**: Know exactly which node and why it failed
 - **State flow visualization**: See how data transforms between nodes
 - **Counterfactual testing**: Test different models/parameters on same inputs
 - **Historical analysis**: Compare behavior across different runs
 
 ### For Production
+
 - **Performance monitoring**: Track node execution times
 - **Cost tracking**: Monitor token usage and API costs
 - **Error patterns**: Identify common failure modes
@@ -359,18 +379,21 @@ For the sample agent with 2 nodes:
 ## Implementation Priority
 
 ### Phase 1: Core Recording
+
 1. Node wrapper implementation
 2. SQLite storage layer
 3. Basic state serialization
 4. Simple replay functionality
 
 ### Phase 2: LLM Integration
+
 1. LLM call detection within nodes
 2. Model parameter extraction
 3. Token/cost tracking
 4. Counterfactual engine
 
 ### Phase 3: User Interface (COMPLETE)
+
 1. ✅ FastAPI backend with REST API endpoints
 2. ✅ Next.js web application with TypeScript
 3. ✅ Modern dark theme with glass morphism design system
@@ -379,6 +402,17 @@ For the sample agent with 2 nodes:
 6. ✅ Framer Motion animations and smooth micro-interactions
 7. ✅ Responsive design supporting desktop and mobile devices
 8. ✅ Comprehensive style guide and design system documentation
+
+### Phase 3.5: Unified Flow Interface (COMPLETE)
+
+1. ✅ **UnifiedFlowInterface Component**: Single cohesive interface combining flow visualization, node details, and testing
+2. ✅ **NodeDetailsPanel**: Tabbed interface (Basic Info, LLM Calls, Testing, Results) with execution browsing
+3. ✅ **Interactive Node Selection**: Click any node to view all executions, supports circular flows
+4. ✅ **Seamless Testing Workflow**: Direct flow from node selection to counterfactual analysis
+5. ✅ **JsonModal Component**: Full-screen modal for viewing JSON content with copy functionality
+6. ✅ **Enhanced ResultsVisualization**: Clickable outputs with visual expansion indicators
+7. ✅ **API Format Fixes**: Backend responses now match TypeScript interfaces correctly
+8. ✅ **Tab Consolidation**: Removed fragmented tabs, unified into single Flow Graph interface
 
 ### Design System Overview
 
@@ -394,9 +428,10 @@ The TimeMachine UI implements a sophisticated design system with:
 
 **Typography System**: Inter font family for UI text and JetBrains Mono for code, with carefully tuned hierarchy and contrast ratios for accessibility.
 
-**Color Philosophy**: 
+**Color Philosophy**:
+
 - Primary blues for interactive elements and highlights
-- Secondary purples for accent colors and gradients  
+- Secondary purples for accent colors and gradients
 - Semantic colors (green/red/yellow) for status indicators
 - Glass transparency levels for different UI layers
 
@@ -405,10 +440,13 @@ This architecture provides the foundation for a production-ready TimeMachine sys
 ## 11. 2D Execution Flow Visualization
 
 ### Overview
+
 TimeMachine includes a comprehensive 2D visualization system for analyzing execution flow patterns and conditional branching in LangGraph agents. The system supports both single-run analysis and aggregate pattern detection across multiple executions.
 
 ### Conditional Branching Support
+
 ✅ **CONFIRMED**: TimeMachine fully supports conditional branching visualization
+
 - Tracks actual execution paths: Node 1 → Node 2 (sometimes) or Node 1 → Node 3 (other times)
 - Preserves conditional edge mappings from original LangGraph structure
 - Records execution sequences with timestamps for flow reconstruction
@@ -417,16 +455,18 @@ TimeMachine includes a comprehensive 2D visualization system for analyzing execu
 ### Visualization Architecture
 
 #### Data Flow Pipeline
+
 ```
 Raw Executions (SQLite) → Flow Analysis (Python) → Graph Data (JSON) → D3.js Visualization (React)
 ```
 
 #### Type System (`/types/visualization.ts`)
+
 ```typescript
 interface FlowNode {
   id: string;
   name: string;
-  type: 'start' | 'node' | 'end' | 'conditional';
+  type: "start" | "node" | "end" | "conditional";
   position: { x: number; y: number };
   executionCount: number;
   avgDuration: number;
@@ -443,7 +483,7 @@ interface FlowEdge {
   avgDuration: number;
   conditions?: string[];
   metadata?: {
-    type?: 'always' | 'conditional' | 'error';
+    type?: "always" | "conditional" | "error";
   };
 }
 
@@ -458,19 +498,20 @@ interface GraphLayout {
 #### Backend Flow Analysis (`/backend.py`)
 
 **Single Run Visualization (`/api/flow-visualization/{graph_run_id}`)**:
+
 ```python
 def get_flow_visualization(graph_run_id: str):
     # Get all executions for this specific run
     executions = recorder.get_graph_executions(graph_run_id)
     sorted_executions = sorted(executions, key=lambda x: x['timestamp'])
-    
+
     # Build nodes with statistics
     for execution in sorted_executions:
         node_stats[node_name]['count'] += 1
         node_stats[node_name]['durations'].append(execution['duration_ms'])
         if execution['status'] == 'success':
             node_stats[node_name]['successes'] += 1
-    
+
     # Build edges from execution sequence
     for i in range(len(sorted_executions) - 1):
         current = sorted_executions[i]
@@ -480,6 +521,7 @@ def get_flow_visualization(graph_run_id: str):
 ```
 
 **Aggregate Visualization (`/api/aggregate-flow-visualization`)**:
+
 ```python
 def get_aggregate_flow_visualization():
     # Combine data across ALL graph runs
@@ -487,7 +529,7 @@ def get_aggregate_flow_visualization():
         executions = recorder.get_graph_executions(run['graph_run_id'])
         path = [e['node_name'] for e in sorted_executions]
         all_paths.append(path)
-        
+
     # Calculate branching points
     for source, targets in edge_sources.items():
         if len(targets) > 1:  # Multiple outgoing edges = branching
@@ -495,7 +537,7 @@ def get_aggregate_flow_visualization():
                 'nodeId': source,
                 'branches': targets
             })
-    
+
     # Path variability analysis
     unique_paths = len(set([tuple(path) for path in all_paths]))
     path_variability = (unique_paths - 1) / max(1, total_runs)
@@ -504,49 +546,60 @@ def get_aggregate_flow_visualization():
 #### Frontend Visualization (`ExecutionFlowVisualization.tsx`)
 
 **Technology Stack**:
+
 - **React + TypeScript**: Component architecture and type safety
 - **D3.js v7**: High-performance SVG rendering and interaction
 - **Framer Motion**: Smooth animations and transitions
 - **TimeMachine Design System**: Glass morphism styling
 
 **Core Features**:
+
 ```typescript
 // Interactive D3.js visualization with zoom/pan
-const zoom = d3.zoom<SVGSVGElement, unknown>()
+const zoom = d3
+  .zoom<SVGSVGElement, unknown>()
   .scaleExtent([0.1, 5])
-  .on('zoom', (event) => {
-    g.attr('transform', event.transform);
+  .on("zoom", (event) => {
+    g.attr("transform", event.transform);
   });
 
 // Dynamic visual encoding
-nodes.append('circle')
-  .attr('r', d => Math.max(20, Math.min(50, d.executionCount * 5))) // Size = frequency
-  .attr('fill', d => {
-    if (d.type === 'start') return 'rgba(34, 197, 94, 0.2)';
-    if (d.type === 'conditional') return 'rgba(59, 130, 246, 0.2)';
-    return 'rgba(156, 163, 175, 0.2)';
+nodes
+  .append("circle")
+  .attr("r", (d) => Math.max(20, Math.min(50, d.executionCount * 5))) // Size = frequency
+  .attr("fill", (d) => {
+    if (d.type === "start") return "rgba(34, 197, 94, 0.2)";
+    if (d.type === "conditional") return "rgba(59, 130, 246, 0.2)";
+    return "rgba(156, 163, 175, 0.2)";
   });
 
 // Edge thickness represents frequency
-edges.attr('stroke-width', d => Math.max(1, d.frequency / 20))
-     .attr('stroke', d => `rgba(156, 163, 175, ${Math.max(0.3, d.frequency / 100)})`);
+edges
+  .attr("stroke-width", (d) => Math.max(1, d.frequency / 20))
+  .attr(
+    "stroke",
+    (d) => `rgba(156, 163, 175, ${Math.max(0.3, d.frequency / 100)})`
+  );
 ```
 
 **Visual Encoding System**:
 
-*Node Representations*:
+_Node Representations_:
+
 - **Size**: Proportional to execution frequency (larger = more executions)
 - **Color**: Type-based (green=start, red=end, blue=conditional, gray=regular)
 - **Badges**: Show execution count numbers
 - **Glow**: Hover and selection feedback
 
-*Edge Representations*:
+_Edge Representations_:
+
 - **Thickness**: Path frequency (thick = common path, thin = rare path)
 - **Opacity**: Usage intensity (solid = always used, faded = sometimes used)
 - **Labels**: Show percentage frequency ("80%", "20%")
 - **Arrows**: Indicate execution direction
 
-*Interactive Elements*:
+_Interactive Elements_:
+
 - **Zoom/Pan Controls**: Navigate large graphs
 - **Click Selection**: View detailed node/edge statistics
 - **Hover Effects**: Highlight elements with glow
@@ -555,52 +608,61 @@ edges.attr('stroke-width', d => Math.max(1, d.frequency / 20))
 #### Integration Points
 
 **Navigation Tabs**:
+
 - **"Flow Graph"**: Single run visualization (requires selected run)
 - **"All Flows"**: Aggregate pattern analysis (always available)
 
 **UI Integration** (`/app/page.tsx`):
-```typescript
-{activeTab === 'flow' && selectedRun && (
-  <ExecutionFlowVisualization 
-    graphRunId={selectedRun.graph_run_id}
-    onNodeSelect={(node) => console.log('Selected node:', node)}
-    onEdgeSelect={(edge) => console.log('Selected edge:', edge)}
-  />
-)}
 
-{activeTab === 'aggregate-flow' && (
-  <AggregateFlowVisualization 
-    onNodeSelect={(node) => console.log('Selected aggregate node:', node)}
-    onEdgeSelect={(edge) => console.log('Selected aggregate edge:', edge)}
-  />
-)}
+```typescript
+{
+  activeTab === "flow" && selectedRun && (
+    <ExecutionFlowVisualization
+      graphRunId={selectedRun.graph_run_id}
+      onNodeSelect={(node) => console.log("Selected node:", node)}
+      onEdgeSelect={(edge) => console.log("Selected edge:", edge)}
+    />
+  );
+}
+
+{
+  activeTab === "aggregate-flow" && (
+    <AggregateFlowVisualization
+      onNodeSelect={(node) => console.log("Selected aggregate node:", node)}
+      onEdgeSelect={(edge) => console.log("Selected aggregate edge:", edge)}
+    />
+  );
+}
 ```
 
 ### Statistical Analysis
 
 **Flow Statistics Computed**:
+
 ```typescript
 interface FlowStatistics {
   totalRuns: number;
-  mostCommonPath: string[];           // Most frequently executed sequence
-  branchingPoints: Array<{            // Nodes with multiple output paths
+  mostCommonPath: string[]; // Most frequently executed sequence
+  branchingPoints: Array<{
+    // Nodes with multiple output paths
     nodeId: string;
     branches: Array<{
       targetNode: string;
-      frequency: number;              // % of time this branch is taken
+      frequency: number; // % of time this branch is taken
     }>;
   }>;
-  deadEnds: string[];                 // Nodes that don't lead anywhere
-  averagePathLength: number;          // Mean number of nodes per execution
-  pathVariability: number;            // 0-1 score of execution diversity
+  deadEnds: string[]; // Nodes that don't lead anywhere
+  averagePathLength: number; // Mean number of nodes per execution
+  pathVariability: number; // 0-1 score of execution diversity
 }
 ```
 
 **Branching Analysis Example**:
+
 ```
 Node "router" has 3 branches:
 ├─ "process_text" (60% frequency)    ← Most common path
-├─ "process_image" (30% frequency)   ← Secondary path  
+├─ "process_image" (30% frequency)   ← Secondary path
 └─ "error_handler" (10% frequency)   ← Error path
 ```
 
@@ -615,6 +677,7 @@ Node "router" has 3 branches:
 5. **Visual Representation**: Edge thickness and labels show frequencies
 
 **Example Conditional Flow**:
+
 ```
           ┌─────────────┐
           │    Input    │
@@ -637,11 +700,13 @@ Node "router" has 3 branches:
 ### Performance Optimizations
 
 **Backend Optimizations**:
+
 - Efficient SQL queries for execution sequence analysis
 - Caching of aggregate statistics for large datasets
 - Optimized JSON serialization for complex graph structures
 
 **Frontend Optimizations**:
+
 - D3.js for 60fps smooth interactions
 - Virtualization for large graphs (planned)
 - Debounced zoom/pan operations
@@ -650,6 +715,7 @@ Node "router" has 3 branches:
 ### Future Extensions
 
 **Planned Enhancements**:
+
 - **Force-directed layout**: Automatic optimal node positioning
 - **Time-based filtering**: Analyze patterns within specific timeframes
 - **Error path highlighting**: Visually emphasize failure patterns
@@ -661,20 +727,22 @@ Node "router" has 3 branches:
 ### Installation and Usage
 
 **Dependencies** (`package.json`):
+
 ```json
 {
   "dependencies": {
-    "d3": "^7.8.5",
+    "d3": "^7.8.5"
     // ... other deps
   },
   "devDependencies": {
-    "@types/d3": "^7.4.3",
+    "@types/d3": "^7.4.3"
     // ... other dev deps
   }
 }
 ```
 
 **Quick Start**:
+
 ```bash
 cd web
 npm install          # Installs D3.js and TypeScript definitions
@@ -683,6 +751,7 @@ python backend.py    # Start FastAPI backend (separate terminal)
 ```
 
 **Navigation**:
+
 1. Record agent executions using TimeMachine decorators
 2. Open web interface at http://localhost:3000
 3. Select a graph run → "Flow Graph" tab shows individual execution flow
@@ -690,4 +759,4 @@ python backend.py    # Start FastAPI backend (separate terminal)
 5. Click nodes/edges for detailed statistics and analysis
 6. Use zoom controls for navigation of complex graphs
 
-The 2D visualization system provides comprehensive insights into both individual execution patterns and aggregate behavior across multiple runs, making it easy to understand conditional branching, identify bottlenecks, and optimize agent performance.
+The 2D visualization system provides comprehensive analysis of both individual execution patterns and aggregate behavior across multiple runs, making it easy to understand conditional branching, identify bottlenecks, and optimize agent performance.

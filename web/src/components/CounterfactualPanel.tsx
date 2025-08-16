@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { Play, Settings, Thermometer, Cpu, Type, Loader2 } from 'lucide-react';
-import { NodeExecution, CounterfactualAnalysis } from '@/types';
-import api from '@/lib/api';
+import React, { useState } from "react";
+import { Play, Settings, Thermometer, Cpu, Type, Loader2 } from "lucide-react";
+import { NodeExecution, CounterfactualAnalysis } from "@/types";
+import api from "@/lib/api";
 
 interface CounterfactualPanelProps {
   execution: NodeExecution;
   onResults: (results: CounterfactualAnalysis) => void;
 }
 
-type AnalysisType = 'temperature' | 'model' | 'custom';
+type AnalysisType = "temperature" | "model" | "custom";
 
 interface AnalysisConfig {
   type: AnalysisType;
@@ -19,36 +19,43 @@ interface AnalysisConfig {
 
 const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
   execution,
-  onResults
+  onResults,
 }) => {
-  const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisType>('temperature');
+  const [selectedAnalysis, setSelectedAnalysis] =
+    useState<AnalysisType>("temperature");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Configuration options
-  const [temperatureValues, setTemperatureValues] = useState<string>('0.1, 0.5, 0.9');
-  const [modelNames, setModelNames] = useState<string>('gpt-3.5-turbo, gpt-4o-mini');
-  const [customModifications, setCustomModifications] = useState<string>('{"temperature": 0.8}');
+  const [temperatureValues, setTemperatureValues] =
+    useState<string>("0.1, 0.5, 0.9");
+  const [modelNames, setModelNames] = useState<string>(
+    "gpt-3.5-turbo, gpt-4o-mini"
+  );
+  const [customModifications, setCustomModifications] = useState<string>(
+    '{"temperature": 0.8}'
+  );
 
   const analysisTypes: AnalysisConfig[] = [
     {
-      type: 'temperature',
-      label: 'Temperature Sensitivity',
+      type: "temperature",
+      label: "Temperature Sensitivity",
       icon: Thermometer,
-      description: 'Test how different temperature values affect creativity and consistency'
+      description:
+        "Test how different temperature values affect creativity and consistency",
     },
     {
-      type: 'model',
-      label: 'Change Models',
+      type: "model",
+      label: "Change Models",
       icon: Cpu,
-      description: 'Compare outputs across different AI models'
+      description: "Compare outputs across different AI models",
     },
     {
-      type: 'custom',
-      label: 'Custom Parameters',
+      type: "custom",
+      label: "Custom Parameters",
       icon: Settings,
-      description: 'Test arbitrary parameter modifications'
-    }
+      description: "Test arbitrary parameter modifications",
+    },
   ];
 
   const runAnalysis = async () => {
@@ -59,40 +66,54 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
       let results: CounterfactualAnalysis;
 
       switch (selectedAnalysis) {
-        case 'temperature':
-          const temps = temperatureValues.split(',').map(t => parseFloat(t.trim())).filter(t => !isNaN(t));
-          results = await api.analyzeTemperatureSensitivity(execution.id, temps);
+        case "temperature":
+          const temps = temperatureValues
+            .split(",")
+            .map((t) => parseFloat(t.trim()))
+            .filter((t) => !isNaN(t));
+          results = await api.analyzeTemperatureSensitivity(
+            execution.id,
+            temps
+          );
           break;
 
-        case 'model':
-          const models = modelNames.split(',').map(m => m.trim()).filter(m => m.length > 0);
+        case "model":
+          const models = modelNames
+            .split(",")
+            .map((m) => m.trim())
+            .filter((m) => m.length > 0);
           results = await api.analyzeModelAlternatives(execution.id, models);
           break;
 
-        case 'custom':
+        case "custom":
           const modifications = JSON.parse(customModifications);
-          const customResult = await api.runCustomCounterfactual(execution.id, modifications, 'custom');
+          const customResult = await api.runCustomCounterfactual(
+            execution.id,
+            modifications,
+            "custom"
+          );
           // Convert single result to analysis format
           results = {
-            scenarios: [{
-              scenario: {
-                name: 'Custom Modification',
-                modifications
+            scenarios: [
+              {
+                scenario: {
+                  name: "Custom Modification",
+                  modifications,
+                },
+                replay_result: customResult,
               },
-              replay_result: customResult
-            }],
-            insights: customResult.success ? ['Custom modification executed successfully'] : ['Custom modification failed'],
-            recommendations: []
+            ],
+            recommendations: [],
           };
           break;
 
         default:
-          throw new Error('Unknown analysis type');
+          throw new Error("Unknown analysis type");
       }
 
       onResults(results);
     } catch (err) {
-      setError('Analysis failed: ' + (err as Error).message);
+      setError("Analysis failed: " + (err as Error).message);
     } finally {
       setLoading(false);
     }
@@ -100,7 +121,7 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
 
   const renderConfigSection = () => {
     switch (selectedAnalysis) {
-      case 'temperature':
+      case "temperature":
         return (
           <div>
             <label className="block text-sm font-medium text-gray-200 mb-2">
@@ -119,7 +140,7 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
           </div>
         );
 
-      case 'model':
+      case "model":
         return (
           <div>
             <label className="block text-sm font-medium text-gray-200 mb-2">
@@ -138,7 +159,7 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
           </div>
         );
 
-      case 'custom':
+      case "custom":
         return (
           <div>
             <label className="block text-sm font-medium text-gray-200 mb-2">
@@ -162,10 +183,14 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-gray-100 mb-2">What If Analysis</h2>
+        <h2 className="text-lg font-semibold text-gray-100 mb-2">
+          What If Analysis
+        </h2>
         <p className="text-sm text-gray-300">
-          Selected execution: <span className="font-medium">{execution.node_name}</span> • 
-          Run counterfactual experiments to see how different parameters affect the output
+          Selected execution:{" "}
+          <span className="font-medium">{execution.node_name}</span> • Run
+          counterfactual experiments to see how different parameters affect the
+          output
         </p>
       </div>
 
@@ -174,28 +199,35 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
         {analysisTypes.map((analysis) => {
           const Icon = analysis.icon;
           const isSelected = selectedAnalysis === analysis.type;
-          
+
           return (
             <button
               key={analysis.type}
               onClick={() => setSelectedAnalysis(analysis.type)}
               className={`
                 apple-glass-card p-4 text-left transition-all
-                ${isSelected 
-                  ? 'ring-2 ring-gray-300/30' 
-                  : 'hover:bg-gray-300/10 hover:ring-1 hover:ring-gray-300/20'
+                ${
+                  isSelected
+                    ? "ring-2 ring-gray-300/30"
+                    : "hover:bg-gray-300/10 hover:ring-1 hover:ring-gray-300/20"
                 }
               `}
             >
               <div className="flex items-center space-x-3 mb-2">
-                <Icon className={`h-5 w-5 ${isSelected ? 'text-gray-200' : 'text-gray-400'}`} />
-                <h3 className={`font-medium ${isSelected ? 'text-gray-100' : 'text-gray-100'}`}>
+                <Icon
+                  className={`h-5 w-5 ${
+                    isSelected ? "text-gray-200" : "text-gray-400"
+                  }`}
+                />
+                <h3
+                  className={`font-medium ${
+                    isSelected ? "text-gray-100" : "text-gray-100"
+                  }`}
+                >
                   {analysis.label}
                 </h3>
               </div>
-              <p className="text-sm text-gray-300">
-                {analysis.description}
-              </p>
+              <p className="text-sm text-gray-300">{analysis.description}</p>
             </button>
           );
         })}
@@ -204,9 +236,10 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
       {/* Configuration Section */}
       <div className="apple-glass-card p-6">
         <h3 className="text-lg font-medium text-gray-100 mb-4">
-          Configure {analysisTypes.find(a => a.type === selectedAnalysis)?.label}
+          Configure{" "}
+          {analysisTypes.find((a) => a.type === selectedAnalysis)?.label}
         </h3>
-        
+
         {renderConfigSection()}
 
         {error && (
@@ -226,7 +259,7 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
             ) : (
               <Play className="h-4 w-4 mr-2" />
             )}
-            {loading ? 'Running Analysis...' : 'Run Analysis'}
+            {loading ? "Running Analysis..." : "Run Analysis"}
           </button>
         </div>
       </div>
@@ -234,7 +267,7 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
       {/* Execution Details */}
       <div className="apple-glass-card p-6">
         <h4 className="font-medium text-gray-100 mb-4">Execution Details</h4>
-        
+
         {/* Basic Metadata */}
         <div className="grid grid-cols-2 gap-4 text-sm mb-6">
           <div>
@@ -243,11 +276,15 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
           </div>
           <div>
             <span className="text-gray-300">Status:</span>
-            <span className="ml-2 font-medium capitalize">{execution.status}</span>
+            <span className="ml-2 font-medium capitalize">
+              {execution.status}
+            </span>
           </div>
           <div>
             <span className="text-gray-300">Duration:</span>
-            <span className="ml-2 font-medium">{Math.round(execution.duration_ms)}ms</span>
+            <span className="ml-2 font-medium">
+              {Math.round(execution.duration_ms)}ms
+            </span>
           </div>
           <div>
             <span className="text-gray-300">Timestamp:</span>

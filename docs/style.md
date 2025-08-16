@@ -7,6 +7,7 @@ This document defines the standardized design system for the TimeMachine Web UI.
 ## Design Philosophy
 
 ### Core Principles
+
 - **Ultra-Dark Minimalism**: Pure grayscale theme eliminating visual distractions
 - **Consistent Glass Morphism**: Unified `apple-glass-card` treatment across all components
 - **Restrained Animations**: Minimal, purposeful interactions that enhance rather than distract
@@ -14,6 +15,7 @@ This document defines the standardized design system for the TimeMachine Web UI.
 - **Professional Aesthetics**: Clean, modern interface with consistent interaction patterns
 
 ### Visual Language
+
 - **Pure Grayscale Palette**: Complete elimination of color distractions
 - **Unified Glass Effects**: Single glass card style (`apple-glass-card`) used throughout
 - **Consistent Borders**: Standardized `border-gray-300/20` for all glass elements
@@ -23,6 +25,7 @@ This document defines the standardized design system for the TimeMachine Web UI.
 ## Color System
 
 ### Text Color Hierarchy
+
 ```css
 text-gray-100    /* Primary headings and important text */
 text-gray-200    /* Secondary headings and button text */
@@ -31,6 +34,7 @@ text-gray-400    /* Muted text, icons, and help text */
 ```
 
 ### Border System
+
 ```css
 border-gray-300/20    /* Standard border for all glass elements */
 border-gray-300/30    /* Focus states and active elements */
@@ -38,6 +42,7 @@ border-gray-300/40    /* Enhanced focus for form inputs */
 ```
 
 ### Background System
+
 ```css
 apple-glass-card              /* Primary glass morphism effect */
 hover:bg-gray-300/10         /* Standard hover state */
@@ -47,21 +52,24 @@ focus:ring-gray-300/30       /* Focus ring for form elements */
 ## Glass Morphism System
 
 ### Primary Glass Card
+
 ```css
 .apple-glass-card {
   background: rgba(156, 163, 175, 0.12);
   backdrop-filter: blur(60px);
-  border: 1px solid rgba(156, 163, 175, 0.20);
+  border: 1px solid rgba(156, 163, 175, 0.2);
   /* Additional shadow and styling layers */
 }
 ```
 
 **Usage Guidelines:**
+
 - Use `apple-glass-card` for ALL cards, panels, and containers
 - Add `border border-gray-300/20` for consistent edge definition
 - Apply `hover:bg-gray-300/10` for interactive elements
 
 ### Prohibited Variations
+
 - ❌ No `frosted-card`, `glass-card`, or other glass variants
 - ❌ No custom background opacities or blur values
 - ❌ No colored borders or backgrounds
@@ -69,18 +77,21 @@ focus:ring-gray-300/30       /* Focus ring for form elements */
 ## Typography Standards
 
 ### Font System
+
 ```css
-font-family: 'Inter', sans-serif;           /* Primary UI font */
-font-family: 'JetBrains Mono', monospace;   /* Code/data display */
+font-family: "Inter", sans-serif; /* Primary UI font */
+font-family: "JetBrains Mono", monospace; /* Code/data display */
 ```
 
 ### Font Weight Standards
+
 ```css
 font-medium     /* Minimum weight for body text (500) */
 font-semibold   /* Headings and emphasis (600) */
 ```
 
 ### Text Scale Hierarchy
+
 ```css
 text-xs     /* 12px - Helper text, metadata */
 text-sm     /* 14px - Body text, descriptions */
@@ -94,6 +105,7 @@ text-3xl    /* 30px - Large metrics/stats */
 ## Button Standards
 
 ### Primary Button Pattern
+
 ```tsx
 <button className="inline-flex items-center px-4 py-2 apple-glass-card text-gray-200 rounded-2xl transition-all border border-gray-300/20 hover:bg-gray-300/10">
   <Icon className="h-4 w-4 mr-2" />
@@ -102,6 +114,7 @@ text-3xl    /* 30px - Large metrics/stats */
 ```
 
 ### Button Specifications
+
 - **Background**: Always `apple-glass-card`
 - **Border**: Always `border border-gray-300/20`
 - **Text**: Always `text-gray-200`
@@ -110,9 +123,10 @@ text-3xl    /* 30px - Large metrics/stats */
 - **Transition**: Always `transition-all`
 
 ### Disabled State
+
 ```tsx
-<button 
-  disabled 
+<button
+  disabled
   className="... disabled:opacity-50 disabled:cursor-not-allowed"
 >
 ```
@@ -120,11 +134,13 @@ text-3xl    /* 30px - Large metrics/stats */
 ## Form Input Standards
 
 ### Input Field Pattern
+
 ```tsx
 <input className="w-full px-3 py-2 apple-glass-card border border-gray-300/20 rounded-md text-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-300/30 focus:border-gray-300/40" />
 ```
 
 ### Input Specifications
+
 - **Background**: Always `apple-glass-card`
 - **Border**: `border border-gray-300/20`
 - **Text**: `text-gray-200`
@@ -134,6 +150,7 @@ text-3xl    /* 30px - Large metrics/stats */
 ## Animation Standards
 
 ### Approved Animations
+
 ```css
 /* Simple transitions only */
 transition-all              /* Standard transition for interactive elements */
@@ -144,12 +161,14 @@ animate-spin                /* For loading indicators only */
 ```
 
 ### Animation Guidelines
+
 1. **Minimal Motion**: No scaling, movement, or rotation on hover
 2. **Essential Feedback Only**: Animations serve functional purposes
 3. **Fast Transitions**: Maximum 0.15s duration
 4. **Static Elements**: Headers, content, and stats remain stationary
 
 ### Prohibited Animations
+
 - ❌ `whileHover={{ scale: 1.02 }}`
 - ❌ `whileHover={{ y: -2 }}`
 - ❌ Spring animations
@@ -160,6 +179,7 @@ animate-spin                /* For loading indicators only */
 ## Component Patterns
 
 ### Empty State Pattern
+
 ```tsx
 <div className="text-center py-16">
   <div className="apple-glass-card p-12 max-w-md mx-auto">
@@ -177,6 +197,7 @@ animate-spin                /* For loading indicators only */
 ```
 
 ### Error State Pattern
+
 ```tsx
 <div className="apple-glass-card border border-gray-300/20 rounded-lg p-4">
   <div className="flex items-center">
@@ -190,6 +211,7 @@ animate-spin                /* For loading indicators only */
 ```
 
 ### Loading State Pattern
+
 ```tsx
 <div className="flex items-center justify-center py-16">
   <div className="apple-glass-card px-8 py-6 text-center">
@@ -200,6 +222,7 @@ animate-spin                /* For loading indicators only */
 ```
 
 ### Card Content Pattern
+
 ```tsx
 <div className="apple-glass-card p-6">
   <h3 className="text-lg font-semibold text-gray-100 mb-4">Card Title</h3>
@@ -210,6 +233,7 @@ animate-spin                /* For loading indicators only */
 ## Layout Standards
 
 ### Container System
+
 ```css
 max-w-7xl mx-auto          /* Main content container */
 px-4 sm:px-6 lg:px-8      /* Responsive padding */
@@ -218,6 +242,7 @@ gap-6                     /* Standard grid gap */
 ```
 
 ### Grid System
+
 ```css
 grid-cols-1               /* Mobile default */
 md:grid-cols-2           /* Tablet */
@@ -226,6 +251,7 @@ xl:grid-cols-4           /* Large desktop */
 ```
 
 ### Spacing Scale
+
 ```css
 space-y-3    /* Tight spacing - list items */
 space-y-4    /* Standard spacing - related elements */
@@ -236,13 +262,15 @@ space-y-8    /* Loose spacing - major sections */
 ## Interaction States
 
 ### Standard Hover Animation (REQUIRED)
+
 **All interactive elements MUST use this exact pattern:**
 
 ```tsx
-className="... transition-all hover:bg-gray-300/10"
+className = "... transition-all hover:bg-gray-300/10";
 ```
 
 **Implementation Rules:**
+
 - **Universal Application**: Apply to buttons, clickable cards, tabs, and any interactive element
 - **Background Change Only**: `hover:bg-gray-300/10` provides subtle glass-like enhancement
 - **Required Transition**: Always include `transition-all` for smooth state changes
@@ -251,11 +279,12 @@ className="... transition-all hover:bg-gray-300/10"
 - **Fast Transitions**: Maximum 0.15s duration (default `transition-all` is perfect)
 
 ### Hover State Examples
+
 ```tsx
 // Buttons
 <button className="... transition-all hover:bg-gray-300/10">
 
-// Cards/Clickable containers  
+// Cards/Clickable containers
 <div className="... transition-all hover:bg-gray-300/10">
 
 // Navigation tabs
@@ -263,11 +292,13 @@ className="... transition-all hover:bg-gray-300/10"
 ```
 
 ### Focus States
+
 - **Rings**: `focus:ring-2 focus:ring-gray-300/30`
 - **Border Enhancement**: `focus:border-gray-300/40`
 - **Outline**: `focus:outline-none` (replaced by ring)
 
 ### Active/Selected States
+
 - **Background**: Subtle background enhancement
 - **Border**: Enhanced border opacity
 - **Text**: Maintain color hierarchy
@@ -275,6 +306,7 @@ className="... transition-all hover:bg-gray-300/10"
 ## Icon Standards
 
 ### Icon Usage
+
 ```tsx
 <Icon className="h-4 w-4 text-gray-300" />     /* Small icons */
 <Icon className="h-5 w-5 text-gray-400" />     /* Medium icons */
@@ -283,13 +315,40 @@ className="... transition-all hover:bg-gray-300/10"
 ```
 
 ### Icon Color Guidelines
+
 - **Functional Icons**: `text-gray-300` (medium contrast)
 - **Decorative Icons**: `text-gray-400` (lower contrast)
 - **Interactive Icons**: `text-gray-300` (in buttons)
 
+### Standard Icon Patterns
+
+#### Expandable Content Indicator
+
+```tsx
+<ChevronDown className="absolute top-3 right-3 h-4 w-4 text-gray-400 opacity-60 group-hover:opacity-100 transition-opacity" />
+```
+
+**Usage Guidelines:**
+
+- **ChevronDown**: Standard icon for expandable JSON content, modals, and dropdowns
+- **Positioning**: Always `absolute top-3 right-3` for content expansion indicators
+- **Opacity States**: `opacity-60` default, `opacity-100` on hover with `transition-opacity`
+- **Size**: Always `h-4 w-4` for content expansion indicators
+- **Color**: Always `text-gray-400` for subtle, non-intrusive indication
+
+**Implementation Pattern:**
+
+```tsx
+<button className="relative group apple-glass-card hover:bg-gray-300/10 transition-all">
+  <div className="pr-8">{/* Content here */}</div>
+  <ChevronDown className="absolute top-3 right-3 h-4 w-4 text-gray-400 opacity-60 group-hover:opacity-100 transition-opacity" />
+</button>
+```
+
 ## Responsive Design
 
 ### Breakpoint Strategy
+
 ```css
 sm: 640px    /* Small tablets */
 md: 768px    /* Tablets and small laptops */
@@ -298,6 +357,7 @@ xl: 1280px   /* Large desktops */
 ```
 
 ### Mobile-First Approach
+
 - Start with single-column layouts
 - Progressive enhancement for larger screens
 - Maintain glass effects across all devices
@@ -306,6 +366,7 @@ xl: 1280px   /* Large desktops */
 ## Accessibility Standards
 
 ### Color Contrast
+
 - Minimum WCAG AA compliance
 - `text-gray-100` for highest contrast needs
 - `text-gray-200` for standard readability
@@ -313,6 +374,7 @@ xl: 1280px   /* Large desktops */
 - `text-gray-400` for muted content only
 
 ### Interactive Elements
+
 - Minimum 44px touch targets
 - Clear focus indicators
 - Semantic HTML structure
@@ -321,6 +383,7 @@ xl: 1280px   /* Large desktops */
 ## Implementation Guidelines
 
 ### CSS Organization
+
 ```css
 /* Class order priority */
 1. Layout (display, position, grid, flex)
@@ -332,6 +395,7 @@ xl: 1280px   /* Large desktops */
 ```
 
 ### Component Consistency Checklist
+
 - ✅ Uses `apple-glass-card` for containers
 - ✅ Uses `text-gray-*` color hierarchy
 - ✅ Uses standardized borders (`border-gray-300/20`)
@@ -341,6 +405,7 @@ xl: 1280px   /* Large desktops */
 - ✅ Implements consistent spacing (`space-y-*`, `gap-*`)
 
 ### Hover Animation Implementation Steps
+
 1. **Identify Interactive Elements**: Find all buttons, clickable cards, tabs, and interactive containers
 2. **Add Required Classes**: Ensure each has `transition-all hover:bg-gray-300/10`
 3. **Remove Prohibited Effects**: Remove any scaling, movement, or complex hover animations
@@ -348,6 +413,7 @@ xl: 1280px   /* Large desktops */
 5. **Validate Performance**: Ensure smooth transitions with no lag or jank
 
 ### Quality Assurance
+
 1. **Visual Consistency**: All cards look identical
 2. **Interactive Consistency**: All buttons behave identically
 3. **Text Hierarchy**: Clear distinction between text levels
@@ -357,6 +423,7 @@ xl: 1280px   /* Large desktops */
 ## Maintenance Guidelines
 
 ### Adding New Components
+
 1. Start with `apple-glass-card` container
 2. Apply standard text color hierarchy
 3. Use approved button patterns
@@ -364,6 +431,7 @@ xl: 1280px   /* Large desktops */
 5. Test across all breakpoints
 
 ### Updating Existing Components
+
 1. Replace custom glass styles with `apple-glass-card`
 2. Standardize text colors to `text-gray-*`
 3. Remove complex animations
@@ -371,6 +439,7 @@ xl: 1280px   /* Large desktops */
 5. Verify consistency with other components
 
 ### Design System Evolution
+
 - New patterns require documentation updates
 - Color additions must fit grayscale theme
 - Animation additions must serve functional purposes
@@ -378,4 +447,4 @@ xl: 1280px   /* Large desktops */
 
 ---
 
-*This style guide enforces consistent, professional aesthetics across the entire TimeMachine interface. All components should follow these patterns for optimal user experience and maintainability.*
+_This style guide enforces consistent, professional aesthetics across the entire TimeMachine interface. All components should follow these patterns for optimal user experience and maintainability._

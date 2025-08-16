@@ -212,19 +212,29 @@ async def analyze_temperature_sensitivity(request: CounterfactualRequest):
         
         results = []
         for scenario in analysis.scenarios:
-            results.append(CounterfactualResult(
-                scenario_name=f"Temperature {scenario.scenario.modifications.get('temperature')}",
-                success=scenario.replay_result.success,
-                original_output=scenario.replay_result.original_output or {},
-                replayed_output=scenario.replay_result.replayed_output or {},
-                difference_score=scenario.replay_result.output_difference_score,
-                error=scenario.replay_result.error if not scenario.replay_result.success else None
-            ))
+            results.append({
+                "scenario": {
+                    "name": f"Temperature {scenario.scenario.modifications.get('temperature')}",
+                    "modifications": scenario.scenario.modifications
+                },
+                "replay_result": {
+                    "scenario_name": f"Temperature {scenario.scenario.modifications.get('temperature')}",
+                    "success": scenario.replay_result.success,
+                    "original_output": scenario.replay_result.original_output or {},
+                    "replayed_output": scenario.replay_result.replayed_output or {},
+                    "difference_score": scenario.replay_result.output_difference_score,
+                    "error": scenario.replay_result.error if not scenario.replay_result.success else None
+                }
+            })
         
         return {
             "scenarios": results,
-            "best_scenario": analysis.best_scenario.scenario.name if analysis.best_scenario else None,
-            "insights": analysis.insights,
+            "best_scenario": {
+                "scenario": {
+                    "name": analysis.best_scenario.scenario.name,
+                    "modifications": analysis.best_scenario.scenario.modifications
+                }
+            } if analysis.best_scenario else None,
             "recommendations": analysis.recommendations
         }
         
@@ -255,19 +265,29 @@ async def analyze_model_alternatives(request: CounterfactualRequest):
         
         results = []
         for scenario in analysis.scenarios:
-            results.append(CounterfactualResult(
-                scenario_name=f"Model {scenario.scenario.modifications.get('model_name')}",
-                success=scenario.replay_result.success,
-                original_output=scenario.replay_result.original_output or {},
-                replayed_output=scenario.replay_result.replayed_output or {},
-                difference_score=scenario.replay_result.output_difference_score,
-                error=scenario.replay_result.error if not scenario.replay_result.success else None
-            ))
+            results.append({
+                "scenario": {
+                    "name": f"Model {scenario.scenario.modifications.get('model_name')}",
+                    "modifications": scenario.scenario.modifications
+                },
+                "replay_result": {
+                    "scenario_name": f"Model {scenario.scenario.modifications.get('model_name')}",
+                    "success": scenario.replay_result.success,
+                    "original_output": scenario.replay_result.original_output or {},
+                    "replayed_output": scenario.replay_result.replayed_output or {},
+                    "difference_score": scenario.replay_result.output_difference_score,
+                    "error": scenario.replay_result.error if not scenario.replay_result.success else None
+                }
+            })
         
         return {
             "scenarios": results,
-            "best_scenario": analysis.best_scenario.scenario.name if analysis.best_scenario else None,
-            "insights": analysis.insights,
+            "best_scenario": {
+                "scenario": {
+                    "name": analysis.best_scenario.scenario.name,
+                    "modifications": analysis.best_scenario.scenario.modifications
+                }
+            } if analysis.best_scenario else None,
             "recommendations": analysis.recommendations
         }
         

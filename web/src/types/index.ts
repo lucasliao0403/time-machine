@@ -58,7 +58,6 @@ export interface CounterfactualAnalysis {
       modifications: Record<string, any>;
     };
   };
-  insights: string[];
   recommendations: string[];
 }
 
