@@ -196,15 +196,14 @@ def test_real_counterfactuals():
         )
         
         print(f"[INFO] Tested {len(temp_analysis.scenarios)} temperature scenarios")
-        print(f"[INFO] Best scenario: {temp_analysis.best_scenario.scenario.name if temp_analysis.best_scenario else 'None'}")
+
         
         # Show detailed scenario results
         print(f"\n[DEBUG] Temperature Scenario Results:")
         for i, scenario_result in enumerate(temp_analysis.scenarios):
             temp = scenario_result.scenario.modifications.get('temperature', 'unknown')
-            diff_score = scenario_result.replay_result.output_difference_score
             success_status = "SUCCESS" if scenario_result.replay_result.success else "FAILED"
-            print(f"  Scenario {i+1} (temp={temp}): {success_status}, difference={diff_score:.3f}")
+            print(f"  Scenario {i+1} (temp={temp}): {success_status}")
             
             if scenario_result.replay_result.success:
                 original = str(scenario_result.replay_result.original_output)
@@ -270,9 +269,8 @@ def test_model_alternatives():
         print(f"\n[DEBUG] Model Comparison Results:")
         for i, scenario_result in enumerate(model_analysis.scenarios):
             model = scenario_result.scenario.modifications.get('model_name', 'unknown')
-            diff_score = scenario_result.replay_result.output_difference_score
             success_status = "SUCCESS" if scenario_result.replay_result.success else "FAILED"
-            print(f"  Scenario {i+1} ({model}): {success_status}, difference={diff_score:.3f}")
+            print(f"  Scenario {i+1} ({model}): {success_status}")
             
             if scenario_result.replay_result.success:
                 original = str(scenario_result.replay_result.original_output)

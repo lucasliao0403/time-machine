@@ -40,7 +40,6 @@ export interface CounterfactualResult {
   success: boolean;
   original_output: Record<string, any>;
   replayed_output: Record<string, any>;
-  difference_score: number;
   error?: string;
 }
 
@@ -52,12 +51,6 @@ export interface CounterfactualAnalysis {
     };
     replay_result: CounterfactualResult;
   }>;
-  best_scenario?: {
-    scenario: {
-      name: string;
-      modifications: Record<string, any>;
-    };
-  };
   recommendations: string[];
 }
 

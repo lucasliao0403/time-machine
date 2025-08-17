@@ -13,10 +13,9 @@ interface UnifiedFlowInterfaceProps {
 interface UnifiedFlowState {
   selectedNode: FlowNode | null;
   selectedEdge: FlowEdge | null;
-  nodeExecutions: NodeExecution[];
-  selectedExecution: NodeExecution | null;
+  currentExecution: NodeExecution | null;
   testResults: CounterfactualAnalysis | null;
-  loadingExecutions: boolean;
+  loadingExecution: boolean;
   error: string | null;
 }
 
@@ -26,36 +25,41 @@ const UnifiedFlowInterface: React.FC<UnifiedFlowInterfaceProps> = ({
   const [state, setState] = useState<UnifiedFlowState>({
     selectedNode: null,
     selectedEdge: null,
-    nodeExecutions: [],
-    selectedExecution: null,
+    currentExecution: null,
     testResults: null,
-    loadingExecutions: false,
+    loadingExecution: false,
     error: null,
   });
 
   // Load executions for a selected node
-  const loadNodeExecutions = useCallback(
+  const loadMostRecentExecution = useCallback(
     async (nodeId: string) => {
-      setState((prev) => ({ ...prev, loadingExecutions: true, error: null }));
+      setState((prev) => ({ ...prev, loadingExecution: true, error: null }));
 
       try {
-        // Use existing API to get all executions for the graph run, then filter by node
+        // Get all executions for the graph run, then find the most recent one for this node
         const allExecutions = await api.getGraphExecutions(graphRunId);
         const nodeExecutions = allExecutions.filter(
           (exec) => exec.node_name === nodeId
         );
 
+        // Sort by timestamp descending and take the most recent
+        const mostRecentExecution =
+          nodeExecutions.sort(
+            (a, b) =>
+              new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+          )[0] || null;
+
         setState((prev) => ({
           ...prev,
-          nodeExecutions,
-          selectedExecution: nodeExecutions[0] || null, // Default to first execution
-          loadingExecutions: false,
+          currentExecution: mostRecentExecution,
+          loadingExecution: false,
         }));
       } catch (error) {
         setState((prev) => ({
           ...prev,
-          error: `Failed to load executions: ${(error as Error).message}`,
-          loadingExecutions: false,
+          error: `Failed to load execution: ${(error as Error).message}`,
+          loadingExecution: false,
         }));
       }
     },
@@ -72,10 +76,10 @@ const UnifiedFlowInterface: React.FC<UnifiedFlowInterfaceProps> = ({
         testResults: null, // Clear previous test results
       }));
 
-      // Load executions for this node
-      loadNodeExecutions(node.id);
+      // Load most recent execution for this node (use node.name for actual node name)
+      loadMostRecentExecution(node.name);
     },
-    [loadNodeExecutions]
+    [loadMostRecentExecution]
   );
 
   // Handle edge selection from flow visualization
@@ -84,18 +88,8 @@ const UnifiedFlowInterface: React.FC<UnifiedFlowInterfaceProps> = ({
       ...prev,
       selectedEdge: edge,
       selectedNode: null,
-      nodeExecutions: [],
-      selectedExecution: null,
+      currentExecution: null,
       testResults: null,
-    }));
-  }, []);
-
-  // Handle execution selection within node details
-  const handleExecutionSelect = useCallback((execution: NodeExecution) => {
-    setState((prev) => ({
-      ...prev,
-      selectedExecution: execution,
-      testResults: null, // Clear previous test results when switching executions
     }));
   }, []);
 
@@ -113,14 +107,13 @@ const UnifiedFlowInterface: React.FC<UnifiedFlowInterfaceProps> = ({
       ...prev,
       selectedNode: null,
       selectedEdge: null,
-      nodeExecutions: [],
-      selectedExecution: null,
+      currentExecution: null,
       testResults: null,
       error: null,
     }));
   }, []);
 
-  const showNodeDetails = state.selectedNode && !state.loadingExecutions;
+  const showNodeDetails = state.selectedNode && !state.loadingExecution;
 
   return (
     <div className="space-y-6">
@@ -144,10 +137,8 @@ const UnifiedFlowInterface: React.FC<UnifiedFlowInterfaceProps> = ({
           >
             <NodeDetailsPanel
               selectedNode={state.selectedNode}
-              executions={state.nodeExecutions}
-              selectedExecution={state.selectedExecution}
+              currentExecution={state.currentExecution}
               testResults={state.testResults}
-              onExecutionSelect={handleExecutionSelect}
               onTestResults={handleTestResults}
               onClearSelection={clearSelection}
             />
@@ -155,8 +146,8 @@ const UnifiedFlowInterface: React.FC<UnifiedFlowInterfaceProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Loading state for executions */}
-      {state.selectedNode && state.loadingExecutions && (
+      {/* Loading state for execution */}
+      {state.selectedNode && state.loadingExecution && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -165,7 +156,7 @@ const UnifiedFlowInterface: React.FC<UnifiedFlowInterfaceProps> = ({
           <div className="flex items-center justify-center space-x-3">
             <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 border-t-gray-100"></div>
             <span className="text-gray-300 font-medium">
-              Loading node executions...
+              Loading node execution...
             </span>
           </div>
         </motion.div>

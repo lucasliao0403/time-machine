@@ -52,13 +52,14 @@ const JsonModal: React.FC<JsonModalProps> = ({
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
 
           {/* Centered Container */}
-          <div className="min-h-full flex items-center justify-center p-4">
+          <div className="fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
+            {/* Re-enable pointer events for the modal content */}
             {/* Modal */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-4xl max-h-[90vh] apple-glass-card border border-gray-300/20 rounded-xl overflow-hidden"
+              className="relative w-full max-w-4xl max-h-[90vh] apple-glass-card border border-gray-300/20 rounded-xl overflow-hidden pointer-events-auto"
             >
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-gray-300/20">

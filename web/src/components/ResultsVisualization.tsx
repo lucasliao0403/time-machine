@@ -73,7 +73,6 @@ const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
 
     return {
       name: scenarioName,
-      difference_score: scenario.replay_result?.difference_score || 0,
       success: scenario.replay_result?.success ?? false,
       color: COLORS[index % COLORS.length],
     };
@@ -161,115 +160,7 @@ const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
             {results.scenarios.filter((s) => !s.replay_result?.success).length}
           </p>
         </div>
-
-        <div className="apple-glass-card border border-gray-300/10 rounded-lg p-4">
-          <div className="flex items-center">
-            <TrendingUp className="h-5 w-5 text-purple-500" />
-            <h3 className="ml-2 text-sm font-medium text-gray-100">
-              Avg. Difference
-            </h3>
-          </div>
-          <p className="mt-2 text-2xl font-bold text-purple-600">
-            {(
-              results.scenarios.reduce(
-                (sum, s) => sum + (s.replay_result?.difference_score || 0),
-                0
-              ) / results.scenarios.length
-            ).toFixed(2)}
-          </p>
-        </div>
       </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Difference Scores Chart */}
-        <div className="apple-glass-card border border-gray-300/10 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-100 mb-4">
-            Output Difference Scores
-          </h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={scenarioData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="name"
-                angle={-45}
-                textAnchor="end"
-                height={60}
-                interval={0}
-              />
-              <YAxis />
-              <Tooltip
-                formatter={(value: number) => [
-                  value.toFixed(3),
-                  "Difference Score",
-                ]}
-                labelFormatter={(label) => `Scenario: ${label}`}
-              />
-              <Bar
-                dataKey="difference_score"
-                fill="#3b82f6"
-                name="Difference Score"
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Success Rate Pie Chart */}
-        <div className="apple-glass-card border border-gray-300/10 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-100 mb-4">
-            Success Rate
-          </h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={successData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, value, percent }) =>
-                  `${name}: ${value} (${(percent || 0).toFixed(0)}%)`
-                }
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {successData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={index === 0 ? "#10b981" : "#ef4444"}
-                  />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Best Scenario */}
-      {results.best_scenario && (
-        <div className="apple-glass-card border border-gray-300/20 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-100 mb-2">
-            Best Scenario
-          </h3>
-          <p className="text-gray-200">
-            <span className="font-medium">
-              {results.best_scenario.scenario?.name ||
-                "Best performing scenario"}
-            </span>
-          </p>
-          {results.best_scenario.scenario?.modifications && (
-            <div className="mt-2 text-sm text-gray-300">
-              Modifications:{" "}
-              {JSON.stringify(
-                results.best_scenario.scenario.modifications,
-                null,
-                2
-              )}
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Detailed Results */}
       <div className="apple-glass-card border border-gray-300/10 rounded-lg p-6">
@@ -309,10 +200,6 @@ const ResultsVisualization: React.FC<ResultsVisualizationProps> = ({
                     ) : (
                       <AlertCircle className="h-4 w-4 text-red-500" />
                     )}
-                    <span className="text-sm text-gray-300">
-                      Difference:{" "}
-                      {(replayResult.difference_score || 0).toFixed(3)}
-                    </span>
                   </div>
                 </div>
 

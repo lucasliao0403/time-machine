@@ -50,7 +50,7 @@ model_comparison = engine.analyze_model_alternatives("execution_id",
 temp_analysis = engine.analyze_temperature_sensitivity("execution_id", 
     [0.1, 0.5, 0.9])
 
-print(f"Best scenario: {model_comparison.best_scenario.scenario.name}")
+print(f"Tested {len(model_comparison.scenarios)} model scenarios")
 ```
 
 ## ✨ Core Features
@@ -104,7 +104,7 @@ comparison = engine.analyze_model_alternatives("execution_123",
     ["gpt-3.5-turbo", "gpt-4", "claude-3-sonnet"])
 
 print(f"Tested {len(comparison.scenarios)} models")
-print(f"Best result: {comparison.best_scenario.scenario.name}")
+print(f"Tested {len(comparison.scenarios)} scenarios")
 for insight in comparison.insights:
     print(f"- {insight}")
 ```
@@ -118,8 +118,8 @@ temp_analysis = engine.analyze_temperature_sensitivity("execution_123",
 print("Temperature effects:")
 for scenario in temp_analysis.scenarios:
     temp = scenario.scenario.modifications['temperature']
-    change = scenario.replay_result.output_difference_score
-    print(f"  Temperature {temp}: {change:.1%} output change")
+    success = scenario.replay_result.success
+          print(f"  Temperature {temp}: {'Success' if success else 'Failed'}")
 ```
 
 ### Prompt Experiments
@@ -132,7 +132,7 @@ prompts = [
 ]
 
 prompt_analysis = engine.analyze_prompt_variations("execution_123", prompts)
-print(f"Best prompt approach: {prompt_analysis.best_scenario.scenario.name}")
+print(f"Tested {len(prompt_analysis.scenarios)} prompt variations")
 ```
 
 ### Web UI Interface

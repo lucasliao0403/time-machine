@@ -23,7 +23,6 @@ class ReplayResult:
     error: Optional[str]
     duration_ms: float
     cost_difference: float  # Simplified - not actively calculated in 2.5
-    output_difference_score: float
 
 
 @dataclass
@@ -61,8 +60,7 @@ class ReplayEngine:
                 success=False,
                 error="Execution not found",
                 duration_ms=0.0,
-                cost_difference=0.0,
-                output_difference_score=0.0
+                cost_difference=0.0
             )
         
         try:
@@ -93,7 +91,6 @@ class ReplayEngine:
             # Analyze results
             original_output = self.serializer.deserialize_state(original_execution['output_state'])
             changes_made = self._get_changes_made(config)
-            difference_score = self._calculate_output_difference(original_output, replayed_output)
             
             # Cost tracking simplified in Phase 2.5
             cost_diff = 0.0
@@ -107,8 +104,7 @@ class ReplayEngine:
                 success=True,
                 error=None,
                 duration_ms=duration,
-                cost_difference=cost_diff,
-                output_difference_score=difference_score
+                cost_difference=cost_diff
             )
             
         except Exception as e:
@@ -121,8 +117,7 @@ class ReplayEngine:
                 success=False,
                 error=str(e),
                 duration_ms=0.0,
-                cost_difference=0.0,
-                output_difference_score=0.0
+                cost_difference=0.0
             )
     
     def replay_graph_run(self, graph_run_id: str, 
@@ -255,47 +250,7 @@ class ReplayEngine:
         
         return None
     
-    def _calculate_output_difference(self, original: Any, replayed: Any) -> float:
-        """Calculate difference score between original and replayed outputs"""
-        if original == replayed:
-            return 0.0
-        
-        if isinstance(original, dict) and isinstance(replayed, dict):
-            return self._calculate_dict_difference(original, replayed)
-        
-        if isinstance(original, str) and isinstance(replayed, str):
-            return self._calculate_string_difference(original, replayed)
-        
-        # Different types or can't compare - assume maximum difference
-        return 1.0
-    
-    def _calculate_dict_difference(self, dict1: Dict, dict2: Dict) -> float:
-        """Calculate difference between two dictionaries"""
-        all_keys = set(dict1.keys()) | set(dict2.keys())
-        if not all_keys:
-            return 0.0
-        
-        differences = 0
-        for key in all_keys:
-            if key not in dict1 or key not in dict2:
-                differences += 1
-            elif dict1[key] != dict2[key]:
-                differences += 1
-        
-        return differences / len(all_keys)
-    
-    def _calculate_string_difference(self, str1: str, str2: str) -> float:
-        """Calculate difference between two strings using simple word comparison"""
-        words1 = set(str1.lower().split())
-        words2 = set(str2.lower().split())
-        
-        if not words1 and not words2:
-            return 0.0
-        
-        all_words = words1 | words2
-        common_words = words1 & words2
-        
-        return 1.0 - (len(common_words) / len(all_words)) if all_words else 0.0
+
     
     def _calculate_cost_difference(self, execution_id: str, config: ReplayConfiguration) -> float:
         """Calculate cost difference between original and replay - simplified in Phase 2.5"""

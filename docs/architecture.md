@@ -218,7 +218,7 @@ class NodeReplayEngine:
         return {
             "original_output": self.deserialize_state(execution['output_state']),
             "replay_output": result,
-            "match": self.compare_states(execution['output_state'], result)
+            "success": result is not None
         }
 
     def replay_graph_run(self, graph_run_id):
@@ -260,10 +260,45 @@ class CounterfactualEngine:
         input_state = self.deserialize_state(execution['input_state'])
         result = modified_node(input_state)
 
-        return result
+        return {
+            "original_output": self.deserialize_state(execution['output_state']),
+            "replayed_output": result,
+            "success": result is not None,
+            "modifications_applied": modifications
+        }
+
+    def analyze_temperature_sensitivity(self, execution_id, temperatures=[0.0, 0.3, 0.7, 1.0]):
+        """Analyze how different temperatures affect node behavior"""
+        results = []
+        for temp in temperatures:
+            scenario_result = self.test_node_with_different_params(
+                execution_id,
+                temperature=temp
+            )
+            results.append({
+                "temperature": temp,
+                "success": scenario_result["success"],
+                "output": scenario_result["replayed_output"]
+            })
+        return results
+
+    def analyze_model_alternatives(self, execution_id, models=['gpt-3.5-turbo', 'gpt-4', 'claude-3-sonnet']):
+        """Test different models on the same execution"""
+        results = []
+        for model in models:
+            scenario_result = self.test_node_with_different_params(
+                execution_id,
+                model=model
+            )
+            results.append({
+                "model": model,
+                "success": scenario_result["success"],
+                "output": scenario_result["replayed_output"]
+            })
+        return results
 ```
 
-## 7. LLM Call Detection
+## 8. LLM Call Detection
 
 ### Capturing LLM Calls Within Nodes
 
@@ -302,7 +337,7 @@ class LLMCallRecorder:
         return result
 ```
 
-## 8. Sample Agent Recording Example
+## 9. Sample Agent Recording Example
 
 ### What Gets Recorded
 
@@ -334,7 +369,7 @@ For the sample agent with 2 nodes:
 }
 ```
 
-## 9. Web UI Integration
+## 10. Web UI Integration
 
 ### FastAPI Backend
 
@@ -342,7 +377,7 @@ For the sample agent with 2 nodes:
 - Replay functionality with ReplayEngine integration
 - Counterfactual testing interface (temperature, model, custom)
 - Flow visualization data with D3.js compatibility
-- Fixed API response format matching TypeScript interfaces
+- Simplified API responses focused on success/failure rather than difference metrics
 
 ### Modern Frontend Architecture
 
@@ -353,7 +388,7 @@ For the sample agent with 2 nodes:
 - **Modal Content Viewing**: JsonModal component for viewing full JSON content with copy functionality
 - **Professional UI**: Glass morphism design system with Framer Motion animations
 
-## 10. Key Benefits
+## 11. Key Benefits
 
 ### For Developers
 
@@ -437,7 +472,68 @@ The TimeMachine UI implements a sophisticated design system with:
 
 This architecture provides the foundation for a production-ready TimeMachine system that integrates seamlessly with existing LangGraph agents while providing powerful debugging and analysis capabilities through a modern, professional interface.
 
-## 11. 2D Execution Flow Visualization
+## 12. Counterfactual Analysis Simplification
+
+### Architecture Decision: Removal of Difference Score Feature
+
+**Date**: Current update  
+**Decision**: Removed output difference score (0-1) calculation and all related features
+
+#### Previous Implementation
+
+The system previously calculated numerical difference scores between original and replayed outputs:
+
+- Dictionary comparison (key/value differences)
+- String comparison (word overlap analysis)
+- Complex scoring algorithms for ranking scenarios
+- UI charts and metrics displaying difference percentages
+
+#### Current Simplified Approach
+
+**Backend Changes**:
+
+- `ReplayResult` dataclass no longer includes `output_difference_score`
+- Removed `_calculate_output_difference()` and related calculation methods
+- Counterfactual analysis now uses binary success/failure logic only
+- Removed `best_scenario` and `worst_scenario` ranking from `CounterfactualComparison`
+- Eliminated `_find_best_scenario()` and `_find_worst_scenario()` methods
+- Simplified recommendation generation without best/worst scenario logic
+
+**API Simplification**:
+
+- Removed `difference_score` fields from all REST endpoints
+- Removed `best_scenario` fields from counterfactual analysis responses
+- Cleaner response format focused on actionable results
+- Reduced computational overhead for large-scale analysis
+
+**Frontend Updates**:
+
+- Removed "Avg. Difference" metric cards
+- Removed "Output Difference Scores" chart visualization
+- Removed "Best Scenario" section from results display
+- Simplified `ResultsVisualization` component
+- Cleaner UI focused on success rates and error analysis
+
+#### Benefits of Simplification
+
+1. **Reduced Complexity**: Eliminated subjective difference scoring algorithms and best/worst scenario ranking
+2. **Better User Experience**: Clear success/failure binary instead of confusing 0-1 scores and arbitrary "best" labels
+3. **Performance**: Faster analysis without complex state comparison calculations or scenario ranking
+4. **Maintainability**: Simpler codebase with fewer edge cases and dependencies
+5. **Focus**: Emphasis on actionable results (success/failure) rather than abstract metrics or rankings
+6. **Objectivity**: Removed subjective "best" scenario selection that may not reflect user priorities
+
+#### Migration Impact
+
+- **Breaking API Changes**: All `difference_score` and `best_scenario` fields removed from responses
+- **Database Schema**: No changes required (metrics were calculated, not stored)
+- **Test Updates**: Mock data and assertions simplified to focus on success/failure scenarios
+- **Documentation**: Updated to reflect simplified analysis approach
+- **Frontend Changes**: Removed best scenario display sections and related UI components
+
+This simplification aligns with user feedback that difference scores and best/worst scenario rankings were not providing actionable insights, while the binary success/failure approach gives clear, understandable results for debugging and optimization.
+
+## 13. 2D Execution Flow Visualization
 
 ### Overview
 

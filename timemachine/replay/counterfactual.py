@@ -43,8 +43,6 @@ class CounterfactualComparison:
     """Comparison of multiple counterfactual scenarios"""
     original_execution_id: str
     scenarios: List[CounterfactualResult]
-    best_scenario: Optional[CounterfactualResult]
-    worst_scenario: Optional[CounterfactualResult]
     recommendations: List[str]
 
 
@@ -162,18 +160,12 @@ class CounterfactualEngine:
             )
             results.append(result)
         
-        # Find best and worst scenarios
-        best_scenario = self._find_best_scenario(results)
-        worst_scenario = self._find_worst_scenario(results)
-        
         # Generate recommendations
         recommendations = self._generate_recommendations(results)
         
         return CounterfactualComparison(
             original_execution_id=execution_id,
             scenarios=results,
-            best_scenario=best_scenario,
-            worst_scenario=worst_scenario,
             recommendations=recommendations
         )
     
@@ -204,8 +196,6 @@ class CounterfactualEngine:
         """Analyze the result of a counterfactual scenario"""
         analysis = {
             'success': replay_result.success,
-            'output_changed': replay_result.output_difference_score > 0.1,
-            'significant_change': replay_result.output_difference_score > 0.5,
             'cost_impact': replay_result.cost_difference,
             'performance_impact': replay_result.duration_ms
         }
@@ -231,86 +221,49 @@ class CounterfactualEngine:
     
     def _evaluate_temperature_change(self, replay_result: ReplayResult) -> str:
         """Evaluate the impact of temperature change"""
-        if replay_result.output_difference_score > 0.7:
-            return "Significant output variation - high temperature impact"
-        elif replay_result.output_difference_score > 0.3:
-            return "Moderate output variation - noticeable temperature impact"
+        if replay_result.success:
+            return "Temperature change applied successfully"
         else:
-            return "Minimal output variation - low temperature sensitivity"
+            return "Temperature change resulted in failure"
     
     def _evaluate_prompt_change(self, replay_result: ReplayResult) -> str:
         """Evaluate the effectiveness of prompt changes"""
-        if replay_result.output_difference_score > 0.5:
-            return "Prompt change significantly affected output"
+        if replay_result.success:
+            return "Prompt change applied successfully"
         else:
-            return "Prompt change had minimal impact"
+            return "Prompt change resulted in failure"
 
     
     def _calculate_confidence(self, scenario: CounterfactualScenario,
                             replay_result: ReplayResult) -> float:
-        """Calculate confidence in the counterfactual result"""
-        confidence = 0.5  # Base confidence
+        """Calculate confidence score for a counterfactual result"""
+        if not replay_result.success:
+            return 0.1
         
-        if replay_result.success:
-            confidence += 0.3
+        confidence = 0.8  # Base confidence for successful replays
         
-        if replay_result.output_difference_score > 0:
-            confidence += 0.1  # Output actually changed
-        
-        # Reduce confidence for complex scenarios
-        if len(scenario.modifications) > 2:
-            confidence -= 0.1
+        # Simple confidence calculation without difference score dependency
+        if scenario.type == CounterfactualType.MODEL_CHANGE:
+            confidence = 0.9
+        elif scenario.type == CounterfactualType.TEMPERATURE_CHANGE:
+            confidence = 0.85
         
         return max(0.0, min(1.0, confidence))
     
-    def _find_best_scenario(self, results: List[CounterfactualResult]) -> Optional[CounterfactualResult]:
-        """Find the best performing scenario - simplified scoring"""
-        successful_results = [r for r in results if r.replay_result.success]
-        if not successful_results:
-            return None
-        
-        # Simple scoring based on confidence and output difference
-        def score_scenario(result: CounterfactualResult) -> float:
-            score = result.confidence * 10
-            # Prefer scenarios with meaningful output changes
-            if result.replay_result.output_difference_score > 0.1:
-                score += 5
-            return score
-        
-        return max(successful_results, key=score_scenario)
-    
-    def _find_worst_scenario(self, results: List[CounterfactualResult]) -> Optional[CounterfactualResult]:
-        """Find the worst performing scenario"""
-        if not results:
-            return None
-        
-        # Prioritize failed scenarios, then low confidence
-        failed_results = [r for r in results if not r.replay_result.success]
-        if failed_results:
-            return failed_results[0]
-        
-        def score_scenario(result: CounterfactualResult) -> float:
-            return -result.confidence  # Lower confidence = worse
-        
-        return max(results, key=score_scenario)
+
 
     
     def _generate_recommendations(self, results: List[CounterfactualResult]) -> List[str]:
         """Generate actionable recommendations - simplified for Phase 2.5"""
         recommendations = []
         
-        best = self._find_best_scenario(results)
-        if best:
-            recommendations.append(f"Consider implementing '{best.scenario.name}' based on analysis")
-        
         failed_scenarios = [r for r in results if not r.replay_result.success]
         if failed_scenarios:
             recommendations.append("Some scenarios failed - review error handling and input validation")
         
-        # Focus on output variation insights
-        high_change_scenarios = [r for r in results 
-                               if r.replay_result.success and r.replay_result.output_difference_score > 0.5]
-        if len(high_change_scenarios) > len(results) * 0.5:
-            recommendations.append("Multiple scenarios produced significant output changes - review sensitivity")
+        # Simple recommendation based on success rate
+        successful_results = [r for r in results if r.replay_result.success]
+        if len(successful_results) > len(results) * 0.8:
+            recommendations.append("High success rate across scenarios - configurations appear stable")
         
         return recommendations

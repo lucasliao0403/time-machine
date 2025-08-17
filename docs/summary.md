@@ -19,7 +19,7 @@
 ## Data Flow
 
 **Recording**: Decorator wraps StateGraph.compile(), instruments each node with wrapper that captures input/output state before/after execution. State gets serialized to JSON and stored in SQLite with execution metadata.
-**Replay**: Engine loads execution from database, deserializes state, applies modifications (model/temperature/prompt changes), re-executes original node function, calculates output difference score, returns comparison results.
+**Replay**: Engine loads execution from database, deserializes state, applies modifications (model/temperature/prompt changes), re-executes original node function, returns comparison results.
 
 ## Modern Web Interface
 

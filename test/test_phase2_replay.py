@@ -144,18 +144,19 @@ def test_counterfactual_engine():
     # Create mock replay engine
     class MockReplayEngine:
         def replay_execution(self, execution_id, config):
-            return ReplayResult(
-                original_execution_id=execution_id,
-                replay_id=f"replay_{execution_id}",
-                original_output={"messages": [{"content": "Original"}]},
-                replayed_output={"messages": [{"content": "Modified"}]},
-                changes_made=["Modified temperature"],
+            # Mock ReplayResult for testing
+            mock_result = ReplayResult(
+                original_execution_id="test_exec_123",
+                replay_id="replay_456",
+                original_output={"original": "test"},
+                replayed_output={"replayed": "test_modified"}, 
+                changes_made=["Modified temperature to 0.8"],
                 success=True,
                 error=None,
-                duration_ms=100.0,
+                duration_ms=150.5,
                 cost_difference=-0.001,  # Slight savings
-                output_difference_score=0.3
             )
+            return mock_result
     
     engine = CounterfactualEngine(MockReplayEngine())
     
@@ -164,13 +165,11 @@ def test_counterfactual_engine():
     
     success = (
         comparison.original_execution_id == 'test_exec_1' and
-        len(comparison.scenarios) == 3 and
-        comparison.best_scenario is not None
+        len(comparison.scenarios) == 3
     )
     
     print(f"  Temperature analysis: {'[PASS]' if success else '[FAIL]'}")
     print(f"  Scenarios analyzed: {len(comparison.scenarios)}")
-    print(f"  Best scenario: {comparison.best_scenario.scenario.name if comparison.best_scenario else 'None'}")
     print(f"  Recommendations: {len(comparison.recommendations)}")
     
     return success
@@ -206,8 +205,7 @@ def test_simple_scenario_analysis():
                 success=True,
                 error=None,
                 duration_ms=100.0,
-                cost_difference=0.0,  # Not tracking costs in 2.5
-                output_difference_score=output_diff
+                cost_difference=0.0  # Not tracking costs in 2.5
             )
     
     engine = CounterfactualEngine(MockReplayEngine())
@@ -215,12 +213,10 @@ def test_simple_scenario_analysis():
     
     success = (
         len(comparison.scenarios) == 3 and
-        comparison.best_scenario is not None and
         len(comparison.recommendations) > 0
     )
     
     print(f"  Temperature scenarios: {len(comparison.scenarios)}")
-    print(f"  Best scenario: {comparison.best_scenario.scenario.name if comparison.best_scenario else 'None'}")
     print(f"  Recommendations: {len(comparison.recommendations)}")
     
     return success

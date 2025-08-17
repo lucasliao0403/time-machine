@@ -182,18 +182,6 @@ const CounterfactualPanel: React.FC<CounterfactualPanelProps> = ({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold text-gray-100 mb-2">
-          What If Analysis
-        </h2>
-        <p className="text-sm text-gray-300">
-          Selected execution:{" "}
-          <span className="font-medium">{execution.node_name}</span> • Run
-          counterfactual experiments to see how different parameters affect the
-          output
-        </p>
-      </div>
-
       {/* Analysis Type Selection */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {analysisTypes.map((analysis) => {

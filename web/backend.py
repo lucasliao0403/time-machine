@@ -108,12 +108,15 @@ class CounterfactualRequest(BaseModel):
     modification_type: str  # 'model', 'temperature', 'prompt', 'custom'
 
 class CounterfactualResult(BaseModel):
-    scenario_name: str
+    original_execution_id: str
+    replay_id: str
+    original_output: Any
+    replayed_output: Any
+    changes_made: List[str]
     success: bool
-    original_output: Dict[str, Any]
-    replayed_output: Dict[str, Any]
-    difference_score: float
-    error: Optional[str] = None
+    error: Optional[str]
+    duration_ms: float
+    cost_difference: float
 
 @app.get("/")
 async def root():
@@ -222,19 +225,12 @@ async def analyze_temperature_sensitivity(request: CounterfactualRequest):
                     "success": scenario.replay_result.success,
                     "original_output": scenario.replay_result.original_output or {},
                     "replayed_output": scenario.replay_result.replayed_output or {},
-                    "difference_score": scenario.replay_result.output_difference_score,
                     "error": scenario.replay_result.error if not scenario.replay_result.success else None
                 }
             })
         
         return {
             "scenarios": results,
-            "best_scenario": {
-                "scenario": {
-                    "name": analysis.best_scenario.scenario.name,
-                    "modifications": analysis.best_scenario.scenario.modifications
-                }
-            } if analysis.best_scenario else None,
             "recommendations": analysis.recommendations
         }
         
@@ -275,19 +271,12 @@ async def analyze_model_alternatives(request: CounterfactualRequest):
                     "success": scenario.replay_result.success,
                     "original_output": scenario.replay_result.original_output or {},
                     "replayed_output": scenario.replay_result.replayed_output or {},
-                    "difference_score": scenario.replay_result.output_difference_score,
                     "error": scenario.replay_result.error if not scenario.replay_result.success else None
                 }
             })
         
         return {
             "scenarios": results,
-            "best_scenario": {
-                "scenario": {
-                    "name": analysis.best_scenario.scenario.name,
-                    "modifications": analysis.best_scenario.scenario.modifications
-                }
-            } if analysis.best_scenario else None,
             "recommendations": analysis.recommendations
         }
         
@@ -309,12 +298,15 @@ async def run_custom_counterfactual(request: CounterfactualRequest):
         result = replay_engine.replay_execution(request.execution_id, config)
         
         return CounterfactualResult(
-            scenario_name=f"Custom {request.modification_type}",
-            success=result.success,
+            original_execution_id=request.execution_id,
+            replay_id=result.replay_id,
             original_output=result.original_output or {},
             replayed_output=result.replayed_output or {},
-            difference_score=result.output_difference_score,
-            error=result.error if not result.success else None
+            changes_made=result.changes_made,
+            success=result.success,
+            error=result.error if not result.success else None,
+            duration_ms=result.duration_ms,
+            cost_difference=result.cost_difference
         )
         
     except Exception as e:
@@ -379,76 +371,68 @@ def get_flow_visualization(graph_run_id: str):
         # Sort executions by timestamp to determine flow order
         sorted_executions = sorted(executions, key=lambda x: x['timestamp'])
         
-        # Build nodes
-        nodes = {}
-        node_stats = defaultdict(lambda: {'count': 0, 'durations': [], 'successes': 0})
-        
-        for execution in sorted_executions:
-            node_name = execution['node_name']
-            node_stats[node_name]['count'] += 1
-            if execution.get('duration_ms'):
-                node_stats[node_name]['durations'].append(execution['duration_ms'])
-            if execution.get('status') == 'success':
-                node_stats[node_name]['successes'] += 1
-        
-        # Create flow nodes
+        # Create linear flow nodes (unroll circular flows)
         flow_nodes = []
-        for i, (node_name, stats) in enumerate(node_stats.items()):
-            avg_duration = sum(stats['durations']) / len(stats['durations']) if stats['durations'] else 0
-            success_rate = stats['successes'] / stats['count'] if stats['count'] > 0 else 0
+        node_occurrence_count = {}  # Track how many times we've seen each node
+        linear_node_map = {}  # Map execution index to linear node ID
+        
+        for i, execution in enumerate(sorted_executions):
+            node_name = execution['node_name']
+            
+            # Count occurrences to create unique IDs for repeated nodes
+            if node_name not in node_occurrence_count:
+                node_occurrence_count[node_name] = 0
+            node_occurrence_count[node_name] += 1
+            
+            # Create unique linear node ID
+            if node_occurrence_count[node_name] == 1:
+                linear_node_id = node_name
+            else:
+                linear_node_id = f"{node_name}_{node_occurrence_count[node_name]}"
+            
+            linear_node_map[i] = linear_node_id
+            
+            # Determine node type
+            node_type = 'start' if i == 0 else ('end' if i == len(sorted_executions) - 1 else 'node')
             
             flow_nodes.append({
-                'id': node_name,
-                'name': node_name,
-                'type': 'start' if i == 0 else ('end' if i == len(node_stats) - 1 else 'node'),
-                'position': {'x': i * 200, 'y': 100},  # Simple horizontal layout
-                'executionCount': stats['count'],
-                'avgDuration': avg_duration,
-                'successRate': success_rate,
-                'lastExecuted': max([e['timestamp'] for e in sorted_executions if e['node_name'] == node_name])
+                'id': linear_node_id,
+                'name': node_name,  # Keep original name for display
+                'type': node_type,
+                'position': {'x': i * 200, 'y': 100},  # Linear horizontal layout
+                'executionCount': 1,  # Each linear node represents one execution
+                'avgDuration': execution.get('duration_ms', 0),
+                'successRate': 1.0 if execution.get('status') == 'success' else 0.0,
+                'lastExecuted': execution['timestamp']
             })
         
-        # Build edges from execution sequence
-        edges = []
-        edge_stats = defaultdict(lambda: {'count': 0, 'durations': []})
+        # Build linear edges between consecutive executions
+        flow_edges = []
         
         for i in range(len(sorted_executions) - 1):
-            current = sorted_executions[i]
-            next_exec = sorted_executions[i + 1]
+            current_linear_id = linear_node_map[i]
+            next_linear_id = linear_node_map[i + 1]
             
-            edge_key = f"{current['node_name']}->{next_exec['node_name']}"
-            edge_stats[edge_key]['count'] += 1
-            
-            if current.get('duration_ms'):
-                edge_stats[edge_key]['durations'].append(current['duration_ms'])
-        
-        # Create flow edges
-        flow_edges = []
-        total_transitions = len(sorted_executions) - 1
-        
-        for edge_key, stats in edge_stats.items():
-            source, target = edge_key.split('->')
-            frequency = (stats['count'] / total_transitions * 100) if total_transitions > 0 else 0
-            avg_duration = sum(stats['durations']) / len(stats['durations']) if stats['durations'] else 0
+            edge_id = f"{current_linear_id}->{next_linear_id}"
             
             flow_edges.append({
-                'id': edge_key,
-                'source': source,
-                'target': target,
-                'executionCount': stats['count'],
-                'frequency': frequency,
-                'avgDuration': avg_duration,
-                'metadata': {'type': 'always'}  # For single run, no conditionals
+                'id': edge_id,
+                'source': current_linear_id,
+                'target': next_linear_id,
+                'executionCount': 1,
+                'frequency': 100.0,  # Each edge represents a single transition
+                'avgDuration': sorted_executions[i].get('duration_ms', 0),
+                'metadata': {'type': 'always'}
             })
         
-        # Calculate statistics
-        node_names = [node['name'] for node in flow_nodes]
+        # Calculate statistics for linear flow
+        linear_path = [node['name'] for node in flow_nodes]
         statistics = {
             'totalRuns': 1,
-            'mostCommonPath': node_names,
-            'branchingPoints': [],  # No branching in single run
-            'deadEnds': [node_names[-1]] if node_names else [],
-            'averagePathLength': len(node_names),
+            'mostCommonPath': linear_path,
+            'branchingPoints': [],  # No branching in linear flow
+            'deadEnds': [linear_path[-1]] if linear_path else [],
+            'averagePathLength': len(linear_path),
             'pathVariability': 0.0  # Single run = no variability
         }
         
