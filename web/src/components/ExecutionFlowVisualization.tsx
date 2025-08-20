@@ -204,10 +204,10 @@ const ExecutionFlowVisualization: React.FC<ExecutionFlowVisualizationProps> = ({
       )
       .attr("stroke", (d) => {
         if (config.highlightMode === "frequency") {
-          const opacity = Math.max(0.3, d.frequency / 100);
-          return `rgba(156, 163, 175, ${opacity})`;
+          const opacity = Math.max(0.4, d.frequency / 100);
+          return `rgba(100, 200, 255, ${opacity})`;
         }
-        return "rgba(156, 163, 175, 0.6)";
+        return "rgba(100, 200, 255, 0.7)";
       })
       .attr("stroke-width", (d) => {
         if (config.highlightMode === "frequency") {
@@ -215,46 +215,21 @@ const ExecutionFlowVisualization: React.FC<ExecutionFlowVisualizationProps> = ({
         }
         return 2;
       })
-      .attr("marker-end", "url(#arrowhead)")
+
       .on("click", (event, d) => {
         setSelectedEdge(d);
         onEdgeSelect?.(d);
       })
       .on("mouseover", function (event, d) {
-        d3.select(this).attr("stroke", "rgba(156, 163, 175, 1)");
+        d3.select(this).attr("stroke", "rgba(100, 200, 255, 1)");
       })
       .on("mouseout", function (event, d) {
         if (selectedEdge?.id !== d.id) {
-          d3.select(this).attr("stroke", "rgba(156, 163, 175, 0.6)");
+          d3.select(this).attr("stroke", "rgba(100, 200, 255, 0.7)");
         }
       });
 
-    // Edge labels (frequency/count)
-    if (config.showLabels) {
-      edges
-        .append("text")
-        .attr("x", (d) => {
-          const sourceNode = graphData.nodes.find((n) => n.id === d.source);
-          const targetNode = graphData.nodes.find((n) => n.id === d.target);
-          return xScale(
-            ((sourceNode?.position.x || 0) + (targetNode?.position.x || 0)) / 2
-          );
-        })
-        .attr("y", (d) => {
-          const sourceNode = graphData.nodes.find((n) => n.id === d.source);
-          const targetNode = graphData.nodes.find((n) => n.id === d.target);
-          return yScale(
-            ((sourceNode?.position.y || 0) + (targetNode?.position.y || 0)) / 2
-          );
-        })
-        .attr("text-anchor", "middle")
-        .attr("dominant-baseline", "middle")
-        .attr("font-size", "12px")
-        .attr("fill", "rgba(156, 163, 175, 0.9)")
-        .attr("font-weight", "600")
-        .text((d) => `${d.frequency.toFixed(0)}%`)
-        .style("pointer-events", "none");
-    }
+
 
     // Draw nodes
     const nodes = g
@@ -279,16 +254,16 @@ const ExecutionFlowVisualization: React.FC<ExecutionFlowVisualizationProps> = ({
         return 50;
       })
       .attr("fill", (d) => {
-        if (d.type === "start") return "rgb(12, 78, 37)";
-        if (d.type === "end") return "rgb(58, 10, 10)";
-        if (d.type === "conditional") return "rgba(59, 130, 246, 1)";
-        return "rgb(79, 82, 87)";
+        if (d.type === "start") return "rgb(28, 167, 79)";
+        if (d.type === "end") return "rgb(197, 94, 21)";
+        if (d.type === "conditional") return "rgb(168, 85, 247)";
+        return "rgb(14, 113, 158)";
       })
       .attr("stroke", (d) => {
-        if (d.type === "start") return "rgba(34, 197, 94, 0.6)";
-        if (d.type === "end") return "rgba(239, 68, 68, 0.6)";
-        if (d.type === "conditional") return "rgba(59, 130, 246, 0.6)";
-        return "rgba(156, 163, 175, 0.6)";
+        if (d.type === "start") return "rgba(34, 197, 94, 0.8)";
+        if (d.type === "end") return "rgba(249, 115, 22, 0.8)";
+        if (d.type === "conditional") return "rgba(168, 85, 247, 0.8)";
+        return "rgba(14, 165, 233, 0.8)";
       })
       .attr("stroke-width", 2)
       .on("click", (event, d) => {
@@ -314,33 +289,13 @@ const ExecutionFlowVisualization: React.FC<ExecutionFlowVisualizationProps> = ({
         .attr("dominant-baseline", "middle")
         .attr("font-size", "14px")
         .attr("font-weight", "600")
-        .attr("fill", "rgba(156, 163, 175, 1)")
+        .attr("fill", "white")
         .text((d) =>
           d.name.length > 10 ? d.name.substring(0, 8) + "..." : d.name
         )
         .style("pointer-events", "none");
 
-      // Execution count badges
-      nodes
-        .append("circle")
-        .attr("cx", 20)
-        .attr("cy", -20)
-        .attr("r", 12)
-        .attr("fill", "rgba(59, 130, 246, 0.8)")
-        .attr("stroke", "rgba(59, 130, 246, 1)")
-        .attr("stroke-width", 1);
 
-      nodes
-        .append("text")
-        .attr("x", 20)
-        .attr("y", -20)
-        .attr("text-anchor", "middle")
-        .attr("dominant-baseline", "middle")
-        .attr("font-size", "10px")
-        .attr("font-weight", "700")
-        .attr("fill", "white")
-        .text((d) => d.executionCount)
-        .style("pointer-events", "none");
     }
 
     // Center the view
