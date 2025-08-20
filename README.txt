@@ -282,9 +282,10 @@ agent = tm_graph.compile()
 - [x] Framer Motion animations and micro-interactions
 - [x] Professional enterprise-grade UI/UX
 
-## 📝 Sample Agent
+## 📝 Sample Agents
 
-The repository includes `sample_agent.py` - a simple two-step LangGraph agent that:
+### Basic Sample Agent (`quick_demo.py`)
+A simple two-step LangGraph agent that:
 1. Asks for a topic (or uses mock input in tests)
 2. Generates an AI response about that topic
 
@@ -292,7 +293,33 @@ Perfect for testing TimeMachine integration:
 
 ```python
 # Run with TimeMachine recording
-python test/test_demo_sample_agent.py
+python quick_demo.py
+```
+
+### Comprehensive Dealership Customer Support Agent (`dealership_customer_support_agent.py`)
+A realistic customer support agent for a car dealership featuring:
+- **7 conversation nodes** with real GPT calls
+- **Human-in-the-loop intervention** for complex decisions
+- **Mock dealership databases** (customers, inventory, service, financing)
+- **Terminal-based conversation flow** with realistic customer interactions
+- **Multiple inquiry types** (service, sales, complaints, financing)
+- **Real-world scenarios** including escalation and approval workflows
+
+Features 7+ real GPT API calls:
+1. Intent analysis and customer greeting
+2. Customer identification and personalization
+3. Detailed inquiry processing
+4. Information processing and recommendations
+5. Solution development with pricing/scheduling
+6. Human agent consultation and decisions
+7. Conversation finalization and follow-up
+
+```python
+# Run interactive dealership demo (requires OPENAI_API_KEY)
+python dealership_customer_support_agent.py
+
+# Validate agent structure
+python test_dealership_agent.py
 ```
 
 ## 🌐 Web Interface

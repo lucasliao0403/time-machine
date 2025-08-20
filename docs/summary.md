@@ -31,15 +31,22 @@
 **Real-time Visualization**: D3.js-powered flow graphs with interactive statistics, testing controls, and result comparison in a single interface.
 **Design System**: Comprehensive style guide with consistent color palette, typography, spacing, and component patterns.
 
+## Sample Agents
+
+**Basic Demo (`quick_demo.py`)**: Simple two-step agent demonstrating core TimeMachine integration with mock data.
+
+**Dealership Customer Support (`dealership_customer_support_agent.py`)**: Comprehensive real-world agent featuring:
+- 7 conversation nodes with actual OpenAI GPT API calls
+- Human-in-the-loop intervention for complex decisions  
+- Mock dealership databases (customers, inventory, service scheduling, financing)
+- Terminal-based conversation flow with realistic customer interactions
+- Multiple inquiry types (service appointments, vehicle sales, complaints, financing)
+- Real escalation and approval workflows
+
+This agent demonstrates TimeMachine's capabilities with real API calls, complex state management, and multi-step conversations requiring human oversight.
+
 ## Next Steps
 
-- Only works with mock data, not real LLM API calls
-- Can't analyze multiple executions at once
-- No way to search old recordings by content
-- Can't export data for external analysis
-- No connections to external DBs
-- No performance monitoring for replay operations
-
-**Real Testing**: Validate with actual OpenAI/Anthropic API calls instead of test data.
-**Missing Tools**: Build batch analysis, content search, export, and cleanup features.
-**Advanced Features**: Add performance monitoring, external DB connections, and advanced analytics.
+**Advanced Testing**: Batch analysis across multiple executions, content search in recordings, data export capabilities.
+**Performance Monitoring**: Track replay success rates, execution times, memory usage for optimization.
+**External Integrations**: Connect to external databases, third-party APIs, and analytics platforms.
