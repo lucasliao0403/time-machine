@@ -8,7 +8,7 @@ TimeMachine records LangGraph agent executions and enables counterfactual testin
 
 ```bash
 # Clone and navigate to project
-git clone <repository-url>
+git clone https://github.com/lucasliao0403/time-machine
 cd time-machine
 
 # Activate virtual environment (Windows)
