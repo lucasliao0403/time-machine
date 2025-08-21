@@ -694,7 +694,7 @@ Ensure they feel valued and clear about next steps.
 # GRAPH CREATION AND EXECUTION
 # ================================
 
-@timemachine.record("dealership_customer_support.db")
+@timemachine.record("sample_agent.db")
 
 def create_dealership_agent():
     """Create the comprehensive dealership customer support agent"""
