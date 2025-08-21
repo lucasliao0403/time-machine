@@ -107,7 +107,7 @@ class TimeMachineGraph:
                 
                 # Store function in registries for replay
                 self.function_registry[node_name] = original_func
-                self.recorder.function_registry[node_name] = original_func
+                self.recorder.register_node_function(node_name, original_func)
                 
                 # Create wrapped version
                 wrapped_func = TimeMachineNodeWrapper(

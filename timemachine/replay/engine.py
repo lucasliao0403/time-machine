@@ -240,13 +240,33 @@ class ReplayEngine:
     
     def _get_node_function(self, node_name: str) -> Optional[Any]:
         """Get the original node function from global registry"""
-        # Try to get from global function registry
+        # Try to get from explicitly set function registry
         if hasattr(self, '_function_registry') and node_name in self._function_registry:
             return self._function_registry[node_name]
         
         # Try to get from recorder if available
         if self.recorder and hasattr(self.recorder, 'function_registry'):
-            return self.recorder.function_registry.get(node_name)
+            function = self.recorder.function_registry.get(node_name)
+            if function:
+                return function
+        
+        # Try to get from recorder's get_node_function method
+        if self.recorder and hasattr(self.recorder, 'get_node_function'):
+            function = self.recorder.get_node_function(node_name)
+            if function:
+                return function
+        
+        # Try to get from global decorator registry
+        try:
+            from ..core.decorator import record
+            if hasattr(record, '_global_registry'):
+                for db_path, timemachine_graph in record._global_registry.items():
+                    if hasattr(timemachine_graph, 'function_registry'):
+                        function = timemachine_graph.function_registry.get(node_name)
+                        if function:
+                            return function
+        except ImportError:
+            pass
         
         return None
     

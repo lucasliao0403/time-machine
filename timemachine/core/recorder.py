@@ -18,6 +18,84 @@ class TimeMachineRecorder:
         self.function_registry = {}  # Store node functions for replay
         self.init_database()
         
+    def register_node_function(self, node_name: str, node_function: Any):
+        """Register a node function for replay"""
+        self.function_registry[node_name] = node_function
+        
+        # Try to persist function information to database
+        try:
+            import inspect
+            import time
+            
+            # Extract the actual function from LangGraph wrappers
+            actual_function = node_function
+            if hasattr(node_function, 'func'):
+                actual_function = node_function.func
+            elif hasattr(node_function, '_func'):
+                actual_function = node_function._func
+            
+            function_module = getattr(actual_function, '__module__', 'unknown')
+            function_name = getattr(actual_function, '__name__', 'unknown')
+            
+            # Try to get source code (may fail for some functions)
+            try:
+                function_source = inspect.getsource(actual_function)
+            except (OSError, TypeError):
+                function_source = str(actual_function)
+            
+            with sqlite3.connect(self.db_path) as conn:
+                conn.execute("""
+                    INSERT OR REPLACE INTO function_registry 
+                    (node_name, function_module, function_name, function_source, created_at)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (node_name, function_module, function_name, function_source, int(time.time())))
+                conn.commit()
+                
+        except Exception as e:
+            print(f"[DEBUG] Could not persist function {node_name}: {e}")
+        
+    def get_node_function(self, node_name: str) -> Optional[Any]:
+        """Get a registered node function"""
+        # First try in-memory registry
+        if node_name in self.function_registry:
+            return self.function_registry[node_name]
+        
+        # Try to load from database and reconstruct
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT function_module, function_name, function_source 
+                    FROM function_registry 
+                    WHERE node_name = ?
+                """, (node_name,))
+                result = cursor.fetchone()
+                
+                if result:
+                    module_name, func_name, source = result
+                    print(f"[DEBUG] Found function info for {node_name}: {module_name}.{func_name}")
+                    
+                    # Try to import the function from its original module
+                    try:
+                        import importlib
+                        if module_name != 'unknown':
+                            module = importlib.import_module(module_name)
+                            function = getattr(module, func_name)
+                            
+                            # Cache it for future use
+                            self.function_registry[node_name] = function
+                            return function
+                        else:
+                            print(f"[DEBUG] Cannot import function with unknown module: {node_name}")
+                        
+                    except (ImportError, AttributeError) as e:
+                        print(f"[DEBUG] Could not import {module_name}.{func_name}: {e}")
+                        
+        except Exception as e:
+            print(f"[DEBUG] Error loading function from database: {e}")
+        
+        return None
+        
     def init_database(self):
         """Initialize SQLite database with required tables"""
         with sqlite3.connect(self.db_path) as conn:
@@ -60,6 +138,16 @@ class TimeMachineRecorder:
                     edges TEXT,
                     start_node TEXT,
                     end_nodes TEXT
+                )
+            """)
+            
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS function_registry (
+                    node_name TEXT PRIMARY KEY,
+                    function_module TEXT,
+                    function_name TEXT,
+                    function_source TEXT,
+                    created_at INTEGER
                 )
             """)
             

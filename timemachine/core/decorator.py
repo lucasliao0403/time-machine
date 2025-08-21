@@ -39,6 +39,11 @@ def record(db_path: str = "timemachine_recordings.db"):
                 # Store global reference for function registry access
                 wrapper._timemachine_graph = timemachine_graph
                 
+                # Also store in a global registry for replay access
+                if not hasattr(record, '_global_registry'):
+                    record._global_registry = {}
+                record._global_registry[db_path] = timemachine_graph
+                
                 return timemachine_graph.compile()
             
             # If result is already compiled, we need to access the original graph

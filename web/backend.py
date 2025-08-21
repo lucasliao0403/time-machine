@@ -195,17 +195,11 @@ async def get_execution(execution_id: str):
 async def analyze_temperature_sensitivity(request: CounterfactualRequest):
     """Run temperature sensitivity analysis"""
     try:
-        # Import the function registry
-        try:
-            from function_registry import get_function_registry
-            function_registry = get_function_registry()
-            print(f"[DEBUG] Function registry loaded: {list(function_registry.keys())}")
-        except Exception as e:
-            print(f"[DEBUG] Error loading function registry: {e}")
-            function_registry = {}
+        recorder = TimeMachineRecorder(request.db_path)
+        print(f"[DEBUG] Function registry from recorder: {list(recorder.function_registry.keys())}")
         
         replay_engine = ReplayEngine(recorder)
-        replay_engine._function_registry = function_registry
+        # The replay engine will automatically use the recorder's function registry
         engine = CounterfactualEngine(replay_engine)
         
         # Extract temperature values from modifications
@@ -241,17 +235,11 @@ async def analyze_temperature_sensitivity(request: CounterfactualRequest):
 async def analyze_model_alternatives(request: CounterfactualRequest):
     """Run model comparison analysis"""
     try:
-        # Import the function registry
-        try:
-            from function_registry import get_function_registry
-            function_registry = get_function_registry()
-            print(f"[DEBUG] Model analysis function registry: {list(function_registry.keys())}")
-        except Exception as e:
-            print(f"[DEBUG] Error loading function registry for models: {e}")
-            function_registry = {}
+        recorder = TimeMachineRecorder(request.db_path)
+        print(f"[DEBUG] Model analysis function registry: {list(recorder.function_registry.keys())}")
         
         replay_engine = ReplayEngine(recorder)
-        replay_engine._function_registry = function_registry
+        # The replay engine will automatically use the recorder's function registry
         engine = CounterfactualEngine(replay_engine)
         
         # Extract model names from modifications
